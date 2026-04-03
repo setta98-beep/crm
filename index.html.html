@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CRM Daniele">
+<meta name="theme-color" content="#0f1520">
+<title>CRM Daniele</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f6f2ec;--bg2:#ede8df;--bg3:#e2dbd0;
+  --ink:#0f1520;--ink2:#28384f;--ink3:#4a5f78;
+  --card:#fff;
+  --rust:#c85e28;--rust2:#e07540;--rust3:#f4a06e;
+  --green:#2a9e66;--red:#c43c3c;--amber:#c48a28;--blue:#2a6ec0;
+  --nav:68px;--safe:env(safe-area-inset-bottom,0px);
+  --r:14px;
+  --ft:'Bricolage Grotesque',sans-serif;
+  --fb:'Instrument Sans',sans-serif;
+}
+body{background:var(--bg);font-family:var(--fb);color:var(--ink);overscroll-behavior:none;-webkit-text-size-adjust:100%}
+#app{max-width:430px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--ink);display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;padding-bottom:var(--safe);z-index:100;border-radius:18px 18px 0 0;box-shadow:0 -2px 20px rgba(15,21,32,.22)}
+.nb{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:#56687f;font-family:var(--fb);font-size:9px;font-weight:500;letter-spacing:.3px;text-transform:uppercase;cursor:pointer;padding:4px 8px;min-width:50px;position:relative}
+.nb.on{color:var(--rust3)}
+.nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.bn{position:absolute;top:0;right:4px;min-width:15px;height:15px;border-radius:99px;background:var(--red);font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* SCREEN */
+.scr{display:none;flex:1;flex-direction:column;min-height:100dvh}
+.scr.on{display:flex}
+
+/* HEADER */
+.hdr{background:var(--ink);color:#e8e4dc;padding:52px 18px 18px;position:relative;overflow:hidden;flex-shrink:0}
+.hdr::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:var(--rust);opacity:.1}
+.hl{font-size:11px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:#4a5f78;margin-bottom:3px}
+.ht{font-family:var(--ft);font-size:22px;font-weight:800;letter-spacing:-.3px}
+.hs{font-size:12.5px;color:#6a8098;margin-top:2px}
+.hr{display:flex;align-items:flex-end;justify-content:space-between}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;padding:14px 14px calc(var(--nav) + var(--safe) + 14px);-webkit-overflow-scrolling:touch}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--r);padding:13px 14px;box-shadow:0 1px 12px rgba(15,21,32,.07);margin-bottom:10px}
+.tap{cursor:pointer;-webkit-user-select:none;transition:transform .14s}
+.tap:active{transform:scale(.98)}
+
+/* BADGE */
+.b{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.bg{background:#e6f5ee;color:var(--green)}
+.br{background:#fde8e8;color:var(--red)}
+.ba{background:#fef4e6;color:var(--amber)}
+.bb{background:#e6effe;color:var(--blue)}
+.bgr{background:var(--bg2);color:var(--ink3)}
+.brs{background:#fce8dc;color:var(--rust)}
+.bml{background:#f0e6fe;color:#7a2ac9}
+.bph{background:#e6f5ee;color:var(--green)}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:10px 16px;border-radius:11px;border:none;font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--rust);color:#fff;box-shadow:0 2px 10px rgba(200,94,40,.28)}.btn-p:active{background:#a84820}
+.btn-s{background:var(--bg2);color:var(--ink)}
+.btn-d{background:#fde8e8;color:var(--red)}
+.btn-sm{padding:6px 11px;font-size:11.5px;border-radius:9px}
+.btn-ic{background:var(--rust);color:#fff;width:44px;height:44px;border-radius:12px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 12px rgba(200,94,40,.32);flex-shrink:0}
+.btn-ic:active{transform:scale(.93)}
+.btn-ic svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* SEARCH */
+.srch{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:9px 13px;box-shadow:0 1px 8px rgba(15,21,32,.07);margin-bottom:12px}
+.srch input{flex:1;border:none;background:none;font-family:var(--fb);font-size:13.5px;color:var(--ink);outline:none}
+.srch input::placeholder{color:#9aabbc}
+.srch-ic{width:16px;height:16px;stroke:#9aabbc;fill:none;stroke-width:2;flex-shrink:0}
+
+/* FILTER CHIPS */
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 12px;border-radius:99px;border:1.5px solid var(--bg3);font-size:11.5px;font-family:var(--fb);font-weight:500;cursor:pointer;background:var(--card);color:var(--ink3);transition:all .15s}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-radius:10px;padding:3px;margin-bottom:14px;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;flex:1;text-align:center;padding:7px 6px;font-size:11px;font-weight:500;border-radius:8px;border:none;background:none;cursor:pointer;color:#7a8fa0;font-family:var(--fb);white-space:nowrap;transition:all .15s}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(15,21,32,.08)}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fl{font-size:11px;font-weight:600;color:#7a8fa0;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;display:block}
+.fi{width:100%;padding:10px 12px;border:1.5px solid var(--bg3);border-radius:10px;font-family:var(--fb);font-size:15px;background:var(--bg);color:var(--ink);outline:none;transition:border .2s;-webkit-appearance:none}
+.fi:focus{border-color:var(--rust);background:#fff}
+textarea.fi{resize:vertical;min-height:70px;font-size:13.5px}
+select.fi{appearance:none}
+
+/* MODAL */
+.mo-ov{position:fixed;inset:0;background:rgba(15,21,32,.52);z-index:400;display:flex;align-items:flex-end;justify-content:center}
+.mo{background:var(--card);border-radius:22px 22px 0 0;padding:20px 18px;padding-bottom:calc(32px + var(--safe));width:100%;max-width:430px;max-height:90dvh;overflow-y:auto;animation:slideup .24s cubic-bezier(.3,0,.1,1)}
+@keyframes slideup{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.mo-ttl{font-family:var(--ft);font-size:17px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.mo-x{background:var(--bg2);border:none;border-radius:99px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink3);flex-shrink:0}
+.mo-acts{display:flex;gap:8px;margin-top:16px}
+.mo-acts .btn{flex:1;justify-content:center}
+
+/* ROW */
+.row{display:flex;align-items:center;gap:10px}
+.av{width:40px;height:40px;border-radius:11px;background:var(--ink2);color:var(--rust3);font-family:var(--ft);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ri{flex:1;min-width:0}
+.rn{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs{font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* DETAIL */
+.dr{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bg2);font-size:13px;gap:12px}
+.dr:last-child{border:none}
+.dk{color:var(--ink3);flex-shrink:0}
+.dv{font-weight:500;text-align:right;word-break:break-word;max-width:65%}
+
+/* PROGRESS */
+.pgw{background:var(--bg2);border-radius:99px;height:5px;margin-top:4px}
+.pgb{height:100%;border-radius:99px;background:var(--rust)}
+
+/* STAT */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sc{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:0 1px 8px rgba(15,21,32,.07)}
+.sc.dk{background:var(--ink)}
+.sn{font-family:var(--ft);font-size:28px;font-weight:800;color:var(--ink)}
+.sc.dk .sn{color:var(--rust3)}
+.sl{font-size:11.5px;color:var(--ink3);margin-top:1px}
+.sc.dk .sl{color:#4a5f72}
+
+/* VOCALE */
+.vwrap{display:flex;flex-direction:column;align-items:center;padding:16px 18px calc(var(--nav) + var(--safe) + 16px)}
+.vmode{display:flex;gap:8px;width:100%;margin-bottom:16px}
+.vmbtn{flex:1;padding:9px 8px;border-radius:10px;border:1.5px solid var(--bg3);font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;background:var(--card);color:var(--ink3);display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.vmbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.vmbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spill{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:500;margin-bottom:14px}
+.sp-idle{background:var(--bg2);color:var(--ink3)}
+.sp-rec{background:#fde8e8;color:var(--red)}
+.sp-proc{background:#fef4e6;color:var(--amber)}
+.sp-ok{background:#e6f5ee;color:var(--green)}
+.sp-err{background:#fde8e8;color:var(--red)}
+.pulse{width:8px;height:8px;border-radius:50%;background:currentColor;animation:dp .8s ease infinite}
+@keyframes dp{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+.mic-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin:14px 0 12px}
+.mring{position:absolute;border-radius:50%;border:2px solid var(--rust);opacity:0}
+.mring.r1{width:120px;height:120px}.mring.r2{width:150px;height:150px}.mring.r3{width:180px;height:180px}
+.vrec .mring{animation:pr 1.8s ease-out infinite;opacity:1}
+.vrec .mring.r2{animation-delay:.4s}.vrec .mring.r3{animation-delay:.8s}
+@keyframes pr{0%{transform:scale(.86);opacity:.7}100%{transform:scale(1.08);opacity:0}}
+.mbtn{width:90px;height:90px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;box-shadow:0 6px 24px rgba(15,21,32,.22);transition:background .22s}
+.vrec .mbtn{background:var(--red)}
+.mbtn svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.wave{display:flex;align-items:center;gap:4px;height:32px;margin-bottom:10px}
+.wb{width:4px;border-radius:99px;background:var(--rust);height:6px}
+.vrec .wb{animation:wa 1s ease-in-out infinite}
+.wb:nth-child(1){animation-delay:0s}.wb:nth-child(2){animation-delay:.1s}.wb:nth-child(3){animation-delay:.2s}
+.wb:nth-child(4){animation-delay:.3s}.wb:nth-child(5){animation-delay:.4s}.wb:nth-child(6){animation-delay:.3s}
+.wb:nth-child(7){animation-delay:.2s}.wb:nth-child(8){animation-delay:.1s}.wb:nth-child(9){animation-delay:0s}
+@keyframes wa{0%,100%{height:6px;opacity:.4}50%{height:26px;opacity:1}}
+.tbox{width:100%;background:var(--card);border-radius:13px;padding:13px;box-shadow:0 1px 8px rgba(15,21,32,.07);margin-bottom:10px;font-size:13.5px;line-height:1.6;color:var(--ink2);font-style:italic;min-height:64px}
+.aibox{width:100%;background:var(--ink);border-radius:13px;padding:14px;margin-bottom:10px;animation:slideup .28s ease}
+.aitl{font-size:10.5px;font-weight:700;color:var(--rust3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:9px}
+.aif{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+.aifk{font-size:10.5px;color:#56687f;min-width:72px;padding-top:2px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+.aifv{font-size:12.5px;color:#e8e4dc;font-weight:500;flex:1;line-height:1.5}
+.vacts{display:flex;gap:8px;width:100%}
+.vacts .btn{flex:1;justify-content:center;font-size:12px;padding:9px 6px}
+.tarea{width:100%;padding:12px 13px;border:1.5px solid var(--bg3);border-radius:13px;font-family:var(--fb);font-size:13.5px;background:var(--card);color:var(--ink);outline:none;resize:none;min-height:100px;line-height:1.6;transition:border .2s;margin-bottom:8px}
+.tarea:focus{border-color:var(--rust)}
+.tarea::placeholder{color:#9aabbc;font-style:italic}
+.tsend{width:100%;padding:11px;background:var(--rust);color:#fff;border:none;border-radius:11px;font-family:var(--fb);font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 10px rgba(200,94,40,.28)}
+.tsend:active{background:#a84820}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb on" data-s="vocale" onclick="go('vocale',this)">
+    <span style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <span style="position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--rust);border:2px solid var(--ink)"></span>
+    </span>Vocale
+  </button>
+  <button class="nb" data-s="clienti" onclick="go('clienti',this)">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Clienti
+  </button>
+  <button class="nb" data-s="visite" onclick="go('visite',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Visite
+  </button>
+  <button class="nb" data-s="att" onclick="go('att',this)">
+    <span style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      <span class="bn" id="bn-att" style="display:none"></span>
+    </span>Attività
+  </button>
+  <button class="nb" data-s="mail" onclick="go('mail',this)">
+    <span style="position:relative">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="bn" id="bn-mail" style="display:none"></span>
+    </span>Mail
+  </button>
+  <button class="nb" data-s="report" onclick="go('report',this)">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Report
+  </button>
+</nav>
+
+<!-- ═══ VOCALE ═══ -->
+<div id="s-vocale" class="scr on">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div class="ht">Registra Visita</div>
+    <div class="hs">Parla o scrivi — il CRM si aggiorna</div>
+  </div>
+  <div class="scroll">
+    <div class="vwrap">
+      <!-- Toggle modalità -->
+      <div class="vmode">
+        <button class="vmbtn on" id="vm-mic" onclick="setMode('mic')">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          Parla
+        </button>
+        <button class="vmbtn" id="vm-txt" onclick="setMode('txt')">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Scrivi
+        </button>
+      </div>
+      <!-- Stato -->
+      <div class="spill sp-idle" id="vpill"><span>Pronto</span></div>
+      <!-- Mic -->
+      <div id="vmic-area">
+        <div class="mic-wrap" id="vmic-wrap">
+          <div class="mring r1"></div><div class="mring r2"></div><div class="mring r3"></div>
+          <button class="mbtn" id="vbtn" onclick="toggleMic()">
+            <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+        </div>
+        <div class="wave" id="vwave" style="display:none"><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
+        <p id="vhint" style="font-size:13px;color:var(--ink3);text-align:center;line-height:1.6;max-width:270px;margin-bottom:12px"><em>"Oggi da Ambrosio, parlato con Meneghini, interessati alle lamiere, richiamare a maggio."</em></p>
+      </div>
+      <!-- Testo input -->
+      <div id="vtxt-area" style="display:none;width:100%">
+        <textarea class="tarea" id="vtxt" placeholder="Scrivi il resoconto della visita o telefonata&#10;&#10;Es: Oggi da Principi a Borgone, parlato con Francesco. Vogliono le lamiere divise per spessore su pedane separate. Richiamare la prossima settimana."></textarea>
+        <button class="tsend" onclick="inviaTestoAI()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          Analizza con AI
+        </button>
+      </div>
+      <!-- Trascrizione -->
+      <div class="tbox" id="vtranscript" style="display:none"></div>
+      <!-- Risultato AI -->
+      <div class="aibox" id="vaibox" style="display:none">
+        <div class="aitl">✦ Estratto dall'AI</div>
+        <div id="vaifields"></div>
+      </div>
+      <!-- Azioni -->
+      <div class="vacts" id="vacts" style="display:none">
+        <button class="btn btn-s" onclick="vReset()">↺ Riprova</button>
+        <button class="btn btn-p" id="vsave" onclick="vSalva()">✓ Salva nel CRM</button>
+      </div>
+      <!-- Conferma -->
+      <div id="vok" style="display:none;text-align:center">
+        <div style="width:58px;height:58px;border-radius:50%;background:#e6f5ee;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--green)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="font-family:var(--ft);font-weight:700;font-size:17px;margin-bottom:4px">Salvato!</div>
+        <div id="vnuovo" style="display:none;background:#fce8dc;border-radius:9px;padding:7px 13px;margin-bottom:8px;font-size:12px;color:var(--rust)"></div>
+        <div style="font-size:13px;color:var(--ink3);margin-bottom:18px">Tutto registrato nel CRM</div>
+        <button class="btn btn-p" onclick="vReset()" style="margin:0 auto">🎙 Nuova registrazione</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CLIENTI ═══ -->
+<div id="s-clienti" class="scr">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div class="hr">
+      <div><div class="ht">Clienti</div><div class="hs" id="cl-cnt"></div></div>
+      <button class="btn-ic" onclick="openClienteForm()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="srch">
+      <svg class="srch-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="cl-q" placeholder="Cerca azienda, città…" oninput="renderClienti()">
+      <button onclick="document.getElementById('cl-q').value='';renderClienti()" style="background:none;border:none;cursor:pointer;color:#9aabbc;font-size:16px;line-height:1">✕</button>
+    </div>
+    <div class="chips" id="cl-chips"></div>
+    <div id="cl-list"></div>
+  </div>
+</div>
+
+<!-- ═══ VISITE ═══ -->
+<div id="s-visite" class="scr">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div class="hr">
+      <div><div class="ht">Visite & Note</div><div class="hs" id="vi-cnt"></div></div>
+      <button class="btn-ic" onclick="openVisitaForm()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="srch">
+      <svg class="srch-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="vi-q" placeholder="Filtra per azienda…" oninput="renderVisite()">
+    </div>
+    <div id="vi-list"></div>
+  </div>
+</div>
+
+<!-- ═══ ATTIVITÀ ═══ -->
+<div id="s-att" class="scr">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div class="hr">
+      <div><div class="ht" id="att-ttl">Attività</div><div class="hs" id="att-cnt"></div></div>
+      <button class="btn-ic" onclick="openAttForm()"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="tabs" id="att-tabs">
+      <button class="tab on" onclick="setAttTab('todo',this)">Da fare</button>
+      <button class="tab" onclick="setAttTab('done',this)">Completate</button>
+    </div>
+    <div id="att-list"></div>
+  </div>
+</div>
+
+<!-- ═══ MAIL ═══ -->
+<div id="s-mail" class="scr">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div class="hr">
+      <div><div class="ht">Mail Log</div><div class="hs" id="ml-cnt"></div></div>
+      <button class="btn-ic" onclick="syncSheets()" title="Aggiorna">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="srch">
+      <svg class="srch-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="ml-q" placeholder="Cerca cliente, oggetto…" oninput="renderMail()">
+    </div>
+    <div class="tabs">
+      <button class="tab on" onclick="setMailTab('all',this)">Tutte</button>
+      <button class="tab" onclick="setMailTab('in',this)">Entrata</button>
+      <button class="tab" onclick="setMailTab('out',this)">Uscita</button>
+      <button class="tab" id="tab-nuovi" onclick="setMailTab('new',this)">Nuovi</button>
+    </div>
+    <div id="ml-list"></div>
+  </div>
+</div>
+
+<!-- ═══ REPORT ═══ -->
+<div id="s-report" class="scr">
+  <div class="hdr">
+    <div class="hl">Co.Me.Fi. Metalli Srl</div>
+    <div><div class="ht">Report</div><div class="hs">Panoramica attività</div></div>
+  </div>
+  <div class="scroll" id="report-body"></div>
+</div>
+
+<!-- MODAL -->
+<div class="mo-ov" id="mo-ov" style="display:none" onclick="if(event.target===this)closeMo()">
+  <div class="mo" id="mo-body"></div>
+</div>
+
+</div><!-- #app -->
+<script>
+/* ══════════════════════════════════════════════════════════
+   DATI
+══════════════════════════════════════════════════════════ */
+const DD_C = [{"id":"c0000","ag":"DAN","azienda":"AA MODELLERIA SRL","citta":"ROLETTO","pr":"TO","contatto":"DAVIDE FASSINO | FRANCESCA CORINO","numero":"392 9338258 | 320 6959488 | 0121 542858","mail":"dfassino@aamodelleria.com | fcorino@aamodelleria.com","piva":"9972390018","stato":"Visitare regolarm.","ultima_visita":"2025-10-30"},{"id":"c0001","ag":"DAN","azienda":"ACMI SPA","citta":"FORNOVO DI TARO","pr":"PR","contatto":"","numero":"0525 401811","mail":"info@acmispa.com","piva":"942570342","stato":"Contatto a distanza","ultima_visita":"2026-01-07"},{"id":"c0002","ag":"DAN","azienda":"ACT EUROPE SRL","citta":"OZEGNA","pr":"TO","contatto":"SABRINA NEGRO ROCASSIN | STEFANIA REGINA","numero":"0124 418274","mail":"s.negro@act-automation.net | s.regina@act-automation.net","piva":"11207400018","stato":"Visitare regolarm.","ultima_visita":"2025-12-02"},{"id":"c0003","ag":"","azienda":"ADI SPORT","citta":"CANALE","pr":"CN","contatto":"SARA GIANOLIO | SARA VERO","numero":"391 7097014 | 328 9151815 | 0173 975664","mail":"commerciale@adisportfloor.it | ufficiotecnico@adisportfloor.it","piva":"3589820046","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0004","ag":"DAN","azienda":"ADM LASER","citta":"BRUINO","pr":"TO","contatto":"ALFONSO DE MARTINO | CAROLA USSEGLIO | DANIELA TRIVENTI","numero":"366 8987422 | 011 9094503","mail":"commerciale@admlaser.it","piva":"11668530014","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0005","ag":"DAN","azienda":"AE APPARECC. ELETT.","citta":"SETTIMO TORINESE","pr":"TO","contatto":"FRANCESCA MARCATO","numero":"011 8222709 INT.300","mail":"f.marcato@a-e.it","piva":"4879010017","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0006","ag":"","azienda":"AF AUTOMAZIONI","citta":"LOMBARDIA","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0007","ag":"","azienda":"AGLA POWER TRASMISS","citta":"AVIGLIANA","pr":"TO","contatto":"MICHELE QUARELLO","numero":"011 9324614 | 334 5089752","mail":"michele.quarello@aglapt.com","piva":"6778050010","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0008","ag":"DAN","azienda":"AGNELLA BIAGIO","citta":"MONCALIERI","pr":"TO","contatto":"SIG DEMANUELE | BARBARA LAGO","numero":"011 19173309","mail":"barbara.lago@airmaxcompany.com","piva":"8817700019","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0009","ag":"","azienda":"AGRICOOLTUR","citta":"OSASIO","pr":"TO","contatto":"VIVIANA POGGIO","numero":"334 3539198 | 379 1618871","mail":"viviana.poggio@agricooltur.it | info@agricooltur.it","piva":"11967520013","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0010","ag":"","azienda":"AIGLE MACCHINE","citta":"BORGARO TORINESE","pr":"TO","contatto":"FRANCESCA | GABRIELE","numero":"011 2624382","mail":"francesca@aigle.it | gabriele@aigle.it","piva":"8765330017","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0011","ag":"DAN","azienda":"AIP PORTE","citta":"BARGE","pr":"CN","contatto":"MARCO AIMAR","numero":"0175 343225","mail":"marco.aimar@aipporte.com","piva":"2853430045","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0012","ag":"DAN","azienda":"ALPA MECCANICA","citta":"DRUENTO","pr":"TO","contatto":"MICHELE MOLA | ELENA","numero":"011 9945689","mail":"mola@alpameccanica.com | amministrazione@alpameccanica.com","piva":"7071140011","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0013","ag":"DAV","azienda":"ALUTRON","citta":"LEINI'","pr":"TO","contatto":"AGOSTINO CAPRERA | LUCIA FORMENTI","numero":"011 9677353","mail":"agostino.caprera@alutron.it | lucia.formenti@alutron.it","piva":"2233520994","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0014","ag":"DAN","azienda":"AM ATTREZZATURE MECCANICHE","citta":"LEINI'","pr":"TO","contatto":"FRANCESCA MARRAZZO","numero":"333 2241581 | 011 9988868","mail":"attrezzaturemeccaniche@gmail.com","piva":"919390013","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0015","ag":"DAN","azienda":"AMBROSIO","citta":"BRANDIZZO","pr":"TO","contatto":"F. MENEGHINI","numero":"011 9130174","mail":"ambrosiosrl@ambrosiosrl.eu | tecnico@ambrosiosrl.eu","piva":"8703010010","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0016","ag":"DAN","azienda":"AMERIO & C. SRL","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0017","ag":"DAN","azienda":"AMP MECCANICA","citta":"BUROLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0018","ag":"","azienda":"AMPRIMO","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0019","ag":"","azienda":"AMR SRL","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"GIANCARLO CANNIZZO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0020","ag":"","azienda":"ANORS","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0021","ag":"","azienda":"ARMA SRL","citta":"CALUSO","pr":"TO","contatto":"ANDREA ARAMU","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0022","ag":"","azienda":"ARME SRL","citta":"CIRIE'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0023","ag":"DAN","azienda":"ARMENI E RAISE","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0024","ag":"DAN","azienda":"ART-CAR","citta":"ROLETTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0025","ag":"","azienda":"ARTIOLI PUBBLICITA'","citta":"BEINASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0026","ag":"DAN","azienda":"ASSEL","citta":"ROMANO CANAVESE","pr":"TO","contatto":"MATTIA CRETAZ","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0027","ag":"DAN","azienda":"AUNDE ITALIA","citta":"POIRINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0028","ag":"DAN","azienda":"AUTOBLOK","citta":"NOVARETTO","pr":"TO","contatto":"MARINO BERSIA","numero":"","mail":"marino.bersia@smwautoblok.it","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0029","ag":"DAN","azienda":"AUTOMATION SERVICE TORINO","citta":"MAPPANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0030","ag":"","azienda":"AVIP","citta":"MAPPANO","pr":"TO","contatto":"FILIPPO RATTAZZI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0031","ag":"","azienda":"BAGLIETTO","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-20"},{"id":"c0032","ag":"DAN","azienda":"BALDO MODELLI","citta":"VENARIA REALE","pr":"TO","contatto":"LINO FARINA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0033","ag":"DAN","azienda":"BASCO SRL","citta":"TRANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0034","ag":"DAN","azienda":"BATTAGLIOTTI","citta":"VENARIA REALE","pr":"TO","contatto":"MASSIMO BRUCOLI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0035","ag":"","azienda":"BBV GLASS","citta":"BEINASCO","pr":"TO","contatto":"","numero":"011 9015116","mail":"info@bbvglass.it","piva":"1985400041","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0036","ag":"DAN","azienda":"BCE","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0037","ag":"DAN","azienda":"BELTECH","citta":"SETTIMO TORINESE","pr":"TO","contatto":"ROBERTO MARENGO | VALERIA CAUDERA","numero":"011 19175273","mail":"info@beltechsrl.it","piva":"11838170014","stato":"Visitare regolarm.","ultima_visita":"2026-01-08"},{"id":"c0038","ag":"DAN","azienda":"BERTAGLIA MODELLI","citta":"PIANEZZA","pr":"TO","contatto":"CHRISTIAN BERTAGLIA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0039","ag":"","azienda":"BERTINO VALENTINO","citta":"ROBASSOMERO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0040","ag":"DAN","azienda":"BIEMMEDUE SPA","citta":"CHERASCO","pr":"CN","contatto":"IVAN BARBERIS","numero":"","mail":"i.barberis@biemmedue.com","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0041","ag":"","azienda":"BIG ONE","citta":"SCALENGHE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0042","ag":"DAN","azienda":"BISIACH & CARRU'","citta":"VENARIA REALE","pr":"TO","contatto":"ANDREA BONARDI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0043","ag":"","azienda":"BITRON","citta":"GRUGLIASCO","pr":"TO","contatto":"GIANLUCA RUELLA","numero":"","mail":"gianfranco.ruella@gru.bitron-ind.com","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0044","ag":"DAN","azienda":"BM CONCEPT","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0045","ag":"DAN","azienda":"BONETTO CV","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0046","ag":"DAN","azienda":"BONETTO SRL","citta":"PINEROLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0047","ag":"DAN","azienda":"BORDONE ALLESTIMENTI","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0048","ag":"","azienda":"BORNEGO E TRUCCO","citta":"MONTA'","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0049","ag":"DAN","azienda":"BOSCO ITALIA","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0050","ag":"","azienda":"BRAMBATI SPA","citta":"CODEVILLA","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0051","ag":"DAN","azienda":"BUSSI MARIO & C. SAS","citta":"CUORGNE'","pr":"TO","contatto":"ANDREA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0052","ag":"","azienda":"C3 SRL","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0053","ag":"","azienda":"CAF","citta":"PIOBESI TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0054","ag":"DAN","azienda":"CAL-TECH","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0055","ag":"DAN","azienda":"CAM SRL","citta":"CARMAGNOLA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0056","ag":"","azienda":"CAMEL","citta":"GRUGLIASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0057","ag":"","azienda":"CAMSS","citta":"VOLPIANO","pr":"TO","contatto":"MARCO IRDE","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0058","ag":"DAN","azienda":"CANGINI","citta":"GRUGLIASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0059","ag":"","azienda":"CARPENTECNICA GROUP SRL","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0060","ag":"","azienda":"CARPENTERIA CARENA","citta":"SAN MICHELE E GRATO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0061","ag":"DAN","azienda":"CASAVECCHIA COSTR. MECC.","citta":"SETTIMO TORINESE","pr":"TO","contatto":"DANIELE CASAVECCHIA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0062","ag":"DAV","azienda":"CATTELINO GIOVANNI","citta":"CIRIE'","pr":"TO","contatto":"GIOVANNI CATTELINO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0063","ag":"","azienda":"CAYRE","citta":"VILLARBASSE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0064","ag":"DAN","azienda":"CCM FINOTELLO","citta":"PIANEZZA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0065","ag":"DAV","azienda":"CEAN","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0066","ag":"DAN","azienda":"CEDI","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0067","ag":"","azienda":"CENTINAL","citta":"LEINI'","pr":"TO","contatto":"GALVANI | OBERTI MASSIMO","numero":"0119988820","mail":"info@centinal.it","piva":"6465820014","stato":"Visitare in zona","ultima_visita":"2025-12-23"},{"id":"c0068","ag":"","azienda":"CEPI RACK","citta":"DRUENTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0069","ag":"DAN","azienda":"CFGM","citta":"RIVOLI","pr":"TO","contatto":"ALESSANDRA | SIG. CONFORTI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0070","ag":"","azienda":"CHIALES TOOLS & PROJECT SRL","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"10982190018","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0071","ag":"DAN","azienda":"CIEMMEBI","citta":"MONCALIERI","pr":"TO","contatto":"CLELIA MASCOLINO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0072","ag":"","azienda":"CMA SRL","citta":"PIANEZZA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0073","ag":"","azienda":"CMB INDUSTRIES SRL","citta":"AGLIE'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0074","ag":"","azienda":"CMF FORNASINO","citta":"VENARIA REALE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0075","ag":"","azienda":"CMM SRL","citta":"MEDOLE","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0076","ag":"","azienda":"COL GIOVANNI PAOLO","citta":"TROFARELLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0077","ag":"DAV","azienda":"COLD CAR","citta":"OCCIMIANO","pr":"AL","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0078","ag":"DAN","azienda":"COLOMBINI","citta":"SETTIMO TORINESE","pr":"TO","contatto":"FABIO COLOMBINI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0079","ag":"DAN","azienda":"COMATIC","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0080","ag":"","azienda":"COMMERCIALE FOND","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0081","ag":"","azienda":"COMMERCIALE SIDERURGICA CUNEESE","citta":"CARAGLIO","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0082","ag":"","azienda":"CONTE SRL","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0083","ag":"","azienda":"COPRAUTO SRL","citta":"BORGONE DI SUSA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0084","ag":"DAN","azienda":"CORIMAMET","citta":"RACCONIGI","pr":"CN","contatto":"FRANCESCA ISOARDI","numero":"0172 86576","mail":"francescacorimamet@gmail.com","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0085","ag":"","azienda":"COTREL","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0086","ag":"DAN","azienda":"COUNTRY LAB","citta":"BRANDIZZO","pr":"TO","contatto":"ELIANA MOROSATO","numero":"335 1773789 | 011 5367350","mail":"morosato@countrylab.com","piva":"7663710015","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0087","ag":"DAN","azienda":"COVI","citta":"SETTIMO TORINESE","pr":"TO","contatto":"LUCA STERCHELE | IVANA SERAFINO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0088","ag":"","azienda":"CREDA ENTERPRISE","citta":"","pr":"","contatto":"DAVIDE CREDARO","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-20"},{"id":"c0089","ag":"","azienda":"CSA","citta":"SETTIMO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0090","ag":"","azienda":"CSL INDUSTRIALE","citta":"LA LOGGIA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0091","ag":"","azienda":"CTS","citta":"CAFASSE","pr":"TO","contatto":"SIG. BENEDETTO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0092","ag":"","azienda":"CUSTOM 2,0","citta":"GRUGLIASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0093","ag":"","azienda":"D ENGINEERING","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0094","ag":"","azienda":"DAME","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0095","ag":"","azienda":"DAMILANO GROUP","citta":"CUNEO","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0096","ag":"DAN","azienda":"DANISI ENGINEERING","citta":"NICHELINO","pr":"TO","contatto":"GAETANO FICHERA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0097","ag":"","azienda":"DE WAVE","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0098","ag":"DAN","azienda":"DEMI SPA","citta":"VILLANOVA MONFERRATO","pr":"AL","contatto":"ANDREA BAGNO","numero":"0323360885","mail":"a.bagno@demiplants.com","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0099","ag":"","azienda":"DM MECCANICA","citta":"QUAREGNA CERRETO","pr":"BI","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0100","ag":"","azienda":"DM PACKAGING","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0101","ag":"","azienda":"DUTTO ILARIO","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0102","ag":"","azienda":"ECS","citta":"CARMAGNOLA","pr":"TO","contatto":"","numero":"011 9721951","mail":"info@ecsitalia.net","piva":"5616050018","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0103","ag":"","azienda":"EKO SRL","citta":"LONATE POZZOLO (VA)","pr":"","contatto":"","numero":"379 1618871","mail":"info@ekosrl.net","piva":"3879090128","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0104","ag":"","azienda":"ELECTRADUE","citta":"SAN GILLIO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0105","ag":"","azienda":"ELECTRO-PARTS SPA","citta":"BOSSOLASCO","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0106","ag":"DAN","azienda":"ELSY","citta":"SETTIMO TORINESE","pr":"TO","contatto":"MATTEO | PAOLA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0107","ag":"","azienda":"EMMEGI SCS","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-12-22"},{"id":"c0108","ag":"","azienda":"ERGOTECH","citta":"SETTIMO VITTONE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0109","ag":"","azienda":"EURODIES","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0110","ag":"","azienda":"EUROMEC 2000","citta":"BUROLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0111","ag":"","azienda":"EUROSTAMP 1","citta":"SETTIMO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0112","ag":"","azienda":"F.LLI LATINI","citta":"ALMESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0113","ag":"","azienda":"F.LLI LUCCO-BORLERA","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0114","ag":"","azienda":"FIBET","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"011 646861","mail":"purchasing@fibet.it","piva":"4527490017","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0115","ag":"","azienda":"FODISA","citta":"LEINI'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0116","ag":"","azienda":"FONDERIA SAN FERMO","citta":"OMEGNA","pr":"VB","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0117","ag":"","azienda":"FRAMIC","citta":"CAFASSE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0118","ag":"","azienda":"FRANCHINO SRL","citta":"SAN DONATO MILANESE","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0119","ag":"","azienda":"FRE&FREA","citta":"BALDISSERO D'ALBA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0120","ag":"","azienda":"FRIMED","citta":"CHIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-20"},{"id":"c0121","ag":"","azienda":"FTR","citta":"GRUGLIASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0122","ag":"DAN","azienda":"GAA","citta":"SETTIMO VITTONE","pr":"TO","contatto":"GIRODO ANGELIN ALBERTO","numero":"335 8335657 | 0125 658989","mail":"a.girodo@gaaitalia.it","piva":"8496990014","stato":"Visitare regolarm.","ultima_visita":"2025-12-19"},{"id":"c0123","ag":"","azienda":"GAI MACCHINE SPA","citta":"CERESOLE D'ALBA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0124","ag":"DAN","azienda":"GALEASSO","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0125","ag":"","azienda":"GALLETTO RADIATORI","citta":"MONTALTO DORA","pr":"TO","contatto":"MIRKO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0126","ag":"","azienda":"GALOSSO GIOVANNI","citta":"RIVALTA DI TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0127","ag":"","azienda":"GARIGLIO MECCANICA","citta":"PIANEZZA","pr":"TO","contatto":"DEBORA GARIGLIO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2026-01-07"},{"id":"c0128","ag":"DAN","azienda":"GATTINO SRL","citta":"RACCONIGI","pr":"CN","contatto":"ANTONELLO BRAGAGNOLO","numero":"","mail":"info@gattino.net","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-28"},{"id":"c0129","ag":"","azienda":"GB MECCANICA","citta":"CARAMAGNA PIEMONTE","pr":"CN","contatto":"RAFFAELLA","numero":"017 289876","mail":"raffaella@gbmeccanica.it","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0130","ag":"","azienda":"GDR","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0131","ag":"","azienda":"GEOFER","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0132","ag":"","azienda":"GHISALBA","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0133","ag":"DAN","azienda":"GIGLIO ATTREZ. E STAMPI","citta":"NICHELINO","pr":"TO","contatto":"ALESSANDRO GIGLIO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0134","ag":"","azienda":"GINALCO","citta":"LESSOLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0135","ag":"","azienda":"GIORDANO ALLESTIMENTI","citta":"PIANEZZA","pr":"TO","contatto":"FRANCESCO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0136","ag":"","azienda":"GIORDANO LAMIERE","citta":"DIANO D'ALBA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0137","ag":"","azienda":"GIORIO","citta":"MONTA'","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0138","ag":"","azienda":"GIOVARA MECCANICA","citta":"RIVAROLO CANAVESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0139","ag":"","azienda":"GOLDEN CAR","citta":"CARAMAGNA PIEMONTE","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0140","ag":"","azienda":"GOMA ELETTRONICA","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0141","ag":"","azienda":"GP TECNICA","citta":"BALDICHIERI D'ASTI","pr":"AT","contatto":"FENZI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0142","ag":"","azienda":"GRAZIADIO","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0143","ag":"","azienda":"GROB","citta":"PIANEZZA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0144","ag":"","azienda":"GS & T","citta":"ORBASSANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0145","ag":"","azienda":"GS MERCALLESE","citta":"","pr":"","contatto":"FRACCARO","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0146","ag":"","azienda":"GUIDA","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0147","ag":"","azienda":"HANGAR","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0148","ag":"","azienda":"HB TECHNOLOGY","citta":"GALLARATE","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0149","ag":"","azienda":"HBTS","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0150","ag":"DAN","azienda":"HONESTAMP","citta":"PONT-SAINT-MARTIN","pr":"AO","contatto":"SIMONE LINGERI","numero":"0125 807500","mail":"simone.lingeri@honestamp.it","piva":"41180076","stato":"Visitare regolarm.","ultima_visita":"2026-01-08"},{"id":"c0151","ag":"","azienda":"HS SRL","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"011 9348611","mail":"info@hs-srl.it","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0152","ag":"","azienda":"ICOM","citta":"SETTIMO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0153","ag":"","azienda":"ILAS","citta":"BRUINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0154","ag":"","azienda":"ILMED","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0155","ag":"","azienda":"IMA TELEROBOT","citta":"ALESSANDRIA","pr":"AL","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0156","ag":"","azienda":"IMPICCICHE AGOSTINO","citta":"RIVAROSSA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0157","ag":"","azienda":"INDUCTION","citta":"POIRINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0158","ag":"","azienda":"INOXTEK","citta":"BUROLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0159","ag":"","azienda":"INTERFIERE","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0160","ag":"","azienda":"IPAS SPA","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0161","ag":"","azienda":"IRONCUT SRL","citta":"MANTA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0162","ag":"","azienda":"ISCM","citta":"VISCHE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0163","ag":"","azienda":"ITALPLANT","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0164","ag":"","azienda":"ITALPOOL","citta":"CHIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0165","ag":"","azienda":"ITD","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0166","ag":"","azienda":"JORIO","citta":"LESSOLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0167","ag":"","azienda":"K-TRONIC","citta":"DRUENTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0168","ag":"","azienda":"LA TAVOLA","citta":"VERCELLI","pr":"VC","contatto":"OSCAR CAVAGLINO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0169","ag":"","azienda":"LABORMEC","citta":"SAN GILLIO","pr":"TO","contatto":"DAVIDE | DANIELA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0170","ag":"","azienda":"LASERGATE","citta":"CARMAGNOLA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0171","ag":"","azienda":"LASERLAM","citta":"BORGARETTO","pr":"TO","contatto":"BERTRAND LUCHINO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0172","ag":"","azienda":"LDA DESIGN","citta":"GRUGLIASCO","pr":"","contatto":"D'AMBROSI LUCIANO","numero":"","mail":"","piva":"","stato":"Consulente","ultima_visita":""},{"id":"c0173","ag":"DAN","azienda":"LISA INDUSTRIE","citta":"CASELETTE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0174","ag":"","azienda":"LISTELLO LUCA OFF. MECC.","citta":"BORGONE DI SUSA","pr":"TO","contatto":"LUCA LISTELLO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2026-03-11"},{"id":"c0175","ag":"","azienda":"LITA","citta":"POIRINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0176","ag":"","azienda":"LIVE-TECH","citta":"MONTICELLO D'ALBA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0177","ag":"","azienda":"LL DI LANOTTE","citta":"SANT'AMBROGIO","pr":"TO","contatto":"SIMONE LANOTTE","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0178","ag":"","azienda":"LL LAVORAZIONI LAMIERE","citta":"BEINASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0179","ag":"","azienda":"LMP2","citta":"NICHELINO","pr":"TO","contatto":"GIUSEPPE GUGGINO","numero":"3315080229 | 0113589382","mail":"direzione@lmp2.it","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0180","ag":"","azienda":"LUCENOVA SRL","citta":"AREZZO","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0181","ag":"","azienda":"LUMALAB","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0182","ag":"","azienda":"LUMEC","citta":"LEINI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0183","ag":"","azienda":"LUMILIGHT","citta":"SANTENA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0184","ag":"","azienda":"MABO SRL","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0185","ag":"","azienda":"MARIO PINTO SPA","citta":"TORINO","pr":"TO","contatto":"FRANCESCA","numero":"","mail":"acquisti@mariopinto.it","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0186","ag":"DAN","azienda":"MARZERO SAS","citta":"CORNELIANO D'ALBA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0187","ag":"","azienda":"MAST MECCANICA","citta":"VENARIA REALE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0188","ag":"","azienda":"MCM DI MASERA","citta":"PINO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0189","ag":"DAN","azienda":"MCTECH","citta":"LEINI'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0190","ag":"","azienda":"MDC DESIGN","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0191","ag":"","azienda":"MECCANIA","citta":"VENARIA REALE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0192","ag":"","azienda":"MECVIL","citta":"GRUGLIASCO","pr":"TO","contatto":"FRANCESCO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0193","ag":"","azienda":"MERLO SRL","citta":"CERVASCA","pr":"CN","contatto":"OVIDIO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0194","ag":"","azienda":"MET ACCIAI","citta":"OZEGNA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0195","ag":"","azienda":"MET ITALIA SRL","citta":"ANGRI","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0196","ag":"","azienda":"METAL CONTAINER","citta":"MAPPANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0197","ag":"","azienda":"METALPLAST SOPRANA","citta":"BRUINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0198","ag":"","azienda":"METALTECNICA SRL","citta":"PRATO SESIA","pr":"NO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0199","ag":"DAN","azienda":"MF MELE","citta":"BRUINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0200","ag":"","azienda":"MGM ROBOTICS","citta":"CUMIANA","pr":"TO","contatto":"JESSICA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0201","ag":"","azienda":"MISA SNC","citta":"BALANGERO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0202","ag":"","azienda":"MIV INSULATING SYSTEMS SRL","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0203","ag":"","azienda":"MLLA","citta":"TROFARELLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0204","ag":"","azienda":"MODAR","citta":"BARLASSINA (MB)","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0205","ag":"","azienda":"MOVINTER","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0206","ag":"","azienda":"MTE","citta":"LEINI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0207","ag":"","azienda":"MTH","citta":"ALMESE","pr":"TO","contatto":"NICOLETTA CARNINO | SIMONE PRINETTO","numero":"011 9346991 | 011 9346950","mail":"nicoletta.carnino@mth.it | simone.prinetto@mth.it","piva":"6196070012","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0208","ag":"","azienda":"MULTITEL PAGLIERO","citta":"MANTA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0209","ag":"","azienda":"NABTESCO OCLAP","citta":"PISCINA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0210","ag":"","azienda":"NANCHINO AUTOMAZ. IND.","citta":"MERCENASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0211","ag":"","azienda":"NC2 GRID","citta":"LEINI'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0212","ag":"","azienda":"NG RUSCONI","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0213","ag":"","azienda":"NKE AUTOMATION","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0214","ag":"","azienda":"NOGI","citta":"VOLPIANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"12014640010","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0215","ag":"","azienda":"NORD LEGNAMI GROUP SRL","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0216","ag":"","azienda":"NOVO","citta":"VENARIA REALE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0217","ag":"","azienda":"NUOVA ARMANDI","citta":"NONE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0218","ag":"","azienda":"NUOVA BN","citta":"VINOVO","pr":"TO","contatto":"PAOLO LISI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0219","ag":"","azienda":"NUOVA SIMACH","citta":"TORRE CANAVESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0220","ag":"","azienda":"NUOVA TECNO TAU","citta":"CIGLIANO","pr":"VC","contatto":"ALICE","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0221","ag":"DAN","azienda":"NUOVA TFM","citta":"SETTIMO TORINESE","pr":"TO","contatto":"GIUSEPPE LAPADULA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0222","ag":"","azienda":"OCF DI AGHEMO","citta":"BORGARETTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0223","ag":"","azienda":"OFFICINE ABRIOLA","citta":"SAN GILLIO","pr":"TO","contatto":"MAURIZIO ABRIOLA","numero":"335 6390791","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0224","ag":"","azienda":"OFFICINE BERTOLOTTI","citta":"VOLPIANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0225","ag":"","azienda":"OFFICINE GAUDINO","citta":"COSSATO","pr":"BI","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0226","ag":"","azienda":"OLIVOTTO","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0227","ag":"","azienda":"OLL","citta":"PIOSSASCO","pr":"TO","contatto":"RINALDO BROI | FEDERICA BROI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0228","ag":"","azienda":"OLMA","citta":"VOLPIANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0229","ag":"","azienda":"OLMEDO SPECIAL VEHICLES","citta":"TORINO","pr":"TO","contatto":"MARCO PROVENZANO","numero":"335 7755923 | 011 2267948","mail":"m.provenzano@olmedospa.it","piva":"2062440355","stato":"Visitare regolarm.","ultima_visita":"2025-12-23"},{"id":"c0230","ag":"","azienda":"OM PROJECT","citta":"BORGARO TORINESE","pr":"TO","contatto":"LINO PETRUZZO","numero":"346 7004830 | 011/4501795","mail":"lino.petruzzo@omproject.it","piva":"9970190014","stato":"Visitare regolarm.","ultima_visita":"2025-12-19"},{"id":"c0231","ag":"","azienda":"OM3","citta":"NIELLA TANANRO","pr":"CN","contatto":"LUCA FERRERI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0232","ag":"","azienda":"OMAP","citta":"VESIME","pr":"AT","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0233","ag":"","azienda":"OMAR TECHNOLOGIES","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0234","ag":"","azienda":"OMAR VEICOLI INDUSTRIALI","citta":"LEINI'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0235","ag":"","azienda":"OMAS","citta":"SETTIMO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0236","ag":"","azienda":"OMBI SRL","citta":"STRAMBINO","pr":"TO","contatto":"DAVIDE RICCARDINO","numero":"346 1459948","mail":"ufficio.acquisti@ombi.it","piva":"9101770015","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0237","ag":"DAN","azienda":"OMEK","citta":"LEINI'","pr":"TO","contatto":"STEFANO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0238","ag":"","azienda":"OMER PRODUZIONE","citta":"ROLETTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0239","ag":"","azienda":"OMG","citta":"GIVOLETTO","pr":"","contatto":"ADA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0240","ag":"","azienda":"OMG MANUFACTURING","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0241","ag":"","azienda":"OMLER 2000","citta":"BANDITO","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0242","ag":"DAN","azienda":"OPAC MARE","citta":"RIVALTA DI TORINO","pr":"TO","contatto":"CHRISTIAN SPERANDIO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0243","ag":"","azienda":"OTS ASSEMBLY","citta":"BEINASCO","pr":"TO","contatto":"GIAMPIERO FERRERO","numero":"011 9033011","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2026-01-20"},{"id":"c0244","ag":"","azienda":"P&P ITALIA","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0245","ag":"","azienda":"PALASER","citta":"CASALE MONFERRATO","pr":"AT","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0246","ag":"","azienda":"PALUMBO LEGNAMI","citta":"CIRIE'","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0247","ag":"","azienda":"PETRAMAR","citta":"LA LOGGIA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0248","ag":"","azienda":"PETRAMAR","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0249","ag":"","azienda":"PFM SPA","citta":"TORREBELVICINO (VC)","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-17"},{"id":"c0250","ag":"","azienda":"PIACENZA MECCANICA","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"MARCO PIACENZA | GIANCARLO","numero":"011 2238595","mail":"marco.piacenza@piacenzameccanica.it","piva":"8436340015","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0251","ag":"","azienda":"PISCAZZI","citta":"COLLEGNO","pr":"TO","contatto":"GIORGIO PISCAZZI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0252","ag":"","azienda":"PL&TL","citta":"AIRASCA","pr":"TO","contatto":"","numero":"0119862996","mail":"pltl@pltl.it","piva":"6473510011","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0253","ag":"","azienda":"PLAF","citta":"PIOSSASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0254","ag":"","azienda":"PODIUM","citta":"VAL D'AOSTA","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0255","ag":"","azienda":"POGLIANO BUSBAR","citta":"MONCALIERI","pr":"TO","contatto":"GIUSEPPE BARBERO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0256","ag":"","azienda":"PREMEC","citta":"LOMBARDORE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0257","ag":"","azienda":"PRINCIPI","citta":"BORGONE DI SUSA","pr":"TO","contatto":"FRANCESCO PRINCIPI","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2026-03-11"},{"id":"c0258","ag":"","azienda":"PROIETTA","citta":"AVIGLIANA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0259","ag":"","azienda":"PROMOD","citta":"VILLARBASSE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0260","ag":"","azienda":"PROTOIN","citta":"MONCALIERI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0261","ag":"","azienda":"PUSPACE","citta":"CARMAGNOLA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0262","ag":"","azienda":"RACK PERUZZI","citta":"BRUINO","pr":"TO","contatto":"GABRIELE MARITANO","numero":"392 5035643","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0263","ag":"","azienda":"RG TECH","citta":"BRUINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-12-22"},{"id":"c0264","ag":"","azienda":"RGV","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-20"},{"id":"c0265","ag":"","azienda":"RIVESTAUTO","citta":"RIVALTA DI TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0266","ag":"","azienda":"RPG","citta":"BIELLA","pr":"BI","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0267","ag":"","azienda":"RSA AUTOMAZIONI","citta":"VALDENGO","pr":"VC","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0268","ag":"","azienda":"SACMI","citta":"MUSSOTTO","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0269","ag":"DAV","azienda":"SAFET","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0270","ag":"DAN","azienda":"SAMEC","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0271","ag":"","azienda":"SAMSON GROUP","citta":"MAPPANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0272","ag":"DAN","azienda":"SANTIANO","citta":"PINEROLO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0273","ag":"DAN","azienda":"SARVADON","citta":"VERRES","pr":"AO","contatto":"ELISA OSSENA","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0274","ag":"DAN","azienda":"SBF TECHNICAL SOLUTIONS S.R.L.","citta":"LEINI","pr":"TO","contatto":"BARBARA DE SIMONE","numero":"011 9968255","mail":"acquisti@sbfts.com","piva":"12939090010","stato":"Visitare in zona","ultima_visita":"2026-01-12"},{"id":"c0275","ag":"","azienda":"SCAET","citta":"COLLEGNO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0276","ag":"","azienda":"SCAM","citta":"NICHELINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0277","ag":"","azienda":"SHANTI GSA","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0278","ag":"","azienda":"SIDER","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0279","ag":"DAN","azienda":"SILATECH","citta":"ORBASSANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0280","ag":"DAN","azienda":"SIMA DI NARDO STEFANO","citta":"COLLERETTO GIACOSA","pr":"TO","contatto":"STEFANO NARDO","numero":"0125 538842","mail":"ufficiotecnico@simastampi.it","piva":"9409990018","stato":"Visitare regolarm.","ultima_visita":"2026-01-12"},{"id":"c0281","ag":"","azienda":"SIMIC","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":"2025-10-20"},{"id":"c0282","ag":"","azienda":"SIMPRO","citta":"BRANDIZZO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0283","ag":"","azienda":"SIRN","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0284","ag":"","azienda":"SL BRANDIZZO","citta":"BRANDIZZO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0285","ag":"","azienda":"SMAT NORD","citta":"ALMESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0286","ag":"","azienda":"SMELL","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0287","ag":"","azienda":"SOLA NEON","citta":"CASTELLETTO STURA","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0288","ag":"","azienda":"SPARK","citta":"GIVOLETTO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0289","ag":"","azienda":"SPEA","citta":"VOLPIANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0290","ag":"","azienda":"STARK","citta":"BARGE","pr":"CN","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0291","ag":"","azienda":"STP SCALE","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0292","ag":"","azienda":"SYNTAX","citta":"BALANGERO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0293","ag":"","azienda":"TAURUS SAGES","citta":"RIVOLI","pr":"TO","contatto":"ROBERTO MONTI","numero":"0119574025","mail":"ufficio-tecnico@taurussages.com","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0294","ag":"","azienda":"TECNO EDM SRL","citta":"SAN MAURIZIO CANAVESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0295","ag":"","azienda":"TECNO LAMIERA","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0296","ag":"","azienda":"TECNO TAU","citta":"CIGLIANO","pr":"VC","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0297","ag":"","azienda":"TECNOFER","citta":"RIVOLI","pr":"TO","contatto":"CRISTINA GARBACCIO | SIG. VERDIGLIONE","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0298","ag":"","azienda":"TECNOMEC","citta":"ARNAD","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0299","ag":"","azienda":"TEKFER","citta":"BEINASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0300","ag":"","azienda":"TEKNO ALFA","citta":"BEINASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0301","ag":"","azienda":"TELMA","citta":"FROSSASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0302","ag":"","azienda":"TEMA","citta":"PIOSSASCO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0303","ag":"","azienda":"TERMOMACCHINE","citta":"RIVALTA DI TORINO","pr":"TO","contatto":"DOTT.SSA GENOVESE | ANDREA PIRAS","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0304","ag":"","azienda":"TESIO COOLING","citta":"MONCALIERI","pr":"TO","contatto":"FRANCO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0305","ag":"","azienda":"TLM","citta":"VOLPIANO","pr":"TO","contatto":"DOMENICO MESSINA | MASSIMILIANO","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0306","ag":"","azienda":"TLM","citta":"RIVOLI","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0307","ag":"DAN","azienda":"TONON","citta":"BORGARO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0308","ag":"","azienda":"TOVO","citta":"ALPIGNANO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0309","ag":"","azienda":"TPF","citta":"SAN MAURO TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0310","ag":"","azienda":"TPRO","citta":"POIRINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0311","ag":"","azienda":"TRASPARENTE","citta":"MAPPANO","pr":"TO","contatto":"DANIELA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0312","ag":"DAN","azienda":"TRELLEBORG","citta":"PIANEZZA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0313","ag":"","azienda":"TS","citta":"STRAMBINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-17"},{"id":"c0314","ag":"","azienda":"TUXOR","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0315","ag":"","azienda":"UNICABLE","citta":"CASELLE TORINESE","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0316","ag":"DAN","azienda":"VIBEL","citta":"NICHELINO","pr":"TO","contatto":"GIANLUCA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":"2025-10-21"},{"id":"c0317","ag":"","azienda":"WINGECO","citta":"GENOVA","pr":"GE","contatto":"","numero":"","mail":"","piva":"","stato":"Contatto a distanza","ultima_visita":""},{"id":"c0318","ag":"","azienda":"WOODEX","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0319","ag":"DAN","azienda":"ZETA MECCANICA","citta":"TORINO","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0320","ag":"DAN","azienda":"FIDIA MACCHINE GRAFICHE SRL","citta":"CIRIE'","pr":"TO","contatto":"CLAUDIO BONINO","numero":"011 9206351","mail":"inquiry@fidiagraf.com","piva":"","stato":"Visitare regolarm.","ultima_visita":"2026-01-15"},{"id":"c0321","ag":"DAN","azienda":"VM SRL","citta":"RIVOLI","pr":"TO","contatto":"CLAUDIO BONINO","numero":"","mail":"","piva":"","stato":"Visitare in zona","ultima_visita":""},{"id":"c0322","ag":"DAN","azienda":"F.S. MODELLI S.R.L.","citta":"RIVOLI","pr":"TO","contatto":"STEFANO FREGUIA","numero":"","mail":"modelli@freguia.it","piva":"12588550017","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0323","ag":"DAN","azienda":"TEKNEL CONSULT SRL","citta":"RIVOLI","pr":"TO","contatto":"MIRKO SACCHETTO | GIORGIO","numero":"","mail":"","piva":"","stato":"Visitare in zona","ultima_visita":""},{"id":"c0324","ag":"DAN","azienda":"DTE SRL","citta":"RIVOLI","pr":"TO","contatto":"EDOARDO di BIASE | RAFFAELE di BIASE","numero":"011 5823729","mail":"info@dtesrl.com","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0325","ag":"DAN","azienda":"ONEDGE","citta":"TORINO","pr":"TO","contatto":"FABIO","numero":"","mail":"fabio@onedge.it","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0326","ag":"DAN","azienda":"RECARO - CASELETTE","citta":"CASELETTE","pr":"TO","contatto":"","numero":"011 9377865","mail":"","piva":"5892290015","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0327","ag":"DAN","azienda":"RECARO - RIVOLI","citta":"RIVOLI","pr":"TO","contatto":"DANIELA MORELLI","numero":"","mail":"daniela.morelli@sfccompositi.it","piva":"5892290015","stato":"Visitare in zona","ultima_visita":"2026-01-22"},{"id":"c0328","ag":"DAN","azienda":"PERANO SPA","citta":"","pr":"CN","contatto":"SIMONA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0329","ag":"DAN","azienda":"VER-MEC","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0330","ag":"DAN","azienda":"PROMEK ROBOTIC SOLUTION SRL","citta":"","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0331","ag":"DAN","azienda":"FERRARI & CARENA","citta":"COLLEGNO","pr":"TO","contatto":"ANFREA","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0332","ag":"DAN","azienda":"STEAT SRL","citta":"RIVALTA","pr":"","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""},{"id":"c0333","ag":"DAN","azienda":"SAMIND","citta":"BORGONE DI SUSA","pr":"TO","contatto":"","numero":"","mail":"","piva":"","stato":"Visitare regolarm.","ultima_visita":""}];
+const DD_V = [{"id":"v0000","azienda":"ACMI SPA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0001","azienda":"AGLA POWER TRASMISS","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0002","azienda":"AMBROSIO","data":"2025-10-17","tipo":"Appunti","referente":"F. MENEGHINI","note":"VISITATO IL SITO. FARE ATTENZIONE ALL'IMBALLO, PEDANE BUONE E IMBALLO ADEGUATO, SI ERA LAMENTATO CHE LAVORIAMO COME SCROSOPPI. RISPONDERE SUBITO ALLE RICHIESTE, COMPRANO DA OCAT E COMMERCIALE FOND"},{"id":"v0003","azienda":"AMP MECCANICA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0004","azienda":"BBV GLASS","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO. CONSOCIATA DI OTS ASSEMBLY"},{"id":"v0005","azienda":"BISIACH & CARRU'","data":"2025-10-17","tipo":"Appunti","referente":"ANDREA BONARDI","note":"VISITATO IL SITO, BISOGNA ANDARE CON ANGELO, L'ULTIMO ANNO E' SCESO DI PARECCHIO IL FATTURATO"},{"id":"v0006","azienda":"BITRON","data":"2025-10-17","tipo":"Appunti","referente":"GIANLUCA RUELLA","note":"VISITATO IL SITO"},{"id":"v0007","azienda":"BONETTO SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0008","azienda":"CCM FINOTELLO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0009","azienda":"CEPI RACK","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, COMPRA AQ"},{"id":"v0010","azienda":"CMF FORNASINO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, TANTI PREVENTIVI, ORDINI PICCOLI"},{"id":"v0011","azienda":"CMM SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0012","azienda":"COMATIC","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0013","azienda":"COUNTRY LAB","data":"2025-10-17","tipo":"Appunti","referente":"ELIANA MOROSATO","note":"VISITATO IL SITO"},{"id":"v0014","azienda":"CUSTOM 2,0","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, TELEFONARE PRIMA DI CANCELLARE"},{"id":"v0015","azienda":"DANISI ENGINEERING","data":"2025-10-17","tipo":"Appunti","referente":"GAETANO FICHERA","note":"VISITATO IL SITO"},{"id":"v0016","azienda":"ECS","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0017","azienda":"EUROMEC 2000","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0018","azienda":"F.LLI LUCCO-BORLERA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0019","azienda":"FIBET","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, CONSEGNATO 16/10/25 500 KG DI ERGAL DA 30 MM"},{"id":"v0020","azienda":"FRAMIC","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0021","azienda":"FRANCHINO SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0022","azienda":"GAI MACCHINE SPA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, SONO DEI COLOSSI"},{"id":"v0023","azienda":"GB MECCANICA","data":"2025-10-17","tipo":"Appunti","referente":"RAFFAELLA","note":"VISITATO IL SITO, COMPRANO 6082 DAL Ø110 AL Ø180 QUATTRO VOLTE L'ANNO"},{"id":"v0024","azienda":"GOLDEN CAR","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0025","azienda":"GOMA ELETTRONICA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0026","azienda":"GP TECNICA","data":"2025-10-17","tipo":"Appunti","referente":"FENZI","note":"VISITATO IL SITO"},{"id":"v0027","azienda":"HB TECHNOLOGY","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, 9120?"},{"id":"v0028","azienda":"HS SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0029","azienda":"ICOM","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, FATTURATO 20 MILIONI"},{"id":"v0030","azienda":"ILMED","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0031","azienda":"INOXTEK","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0032","azienda":"INTERFIERE","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0033","azienda":"ITALPOOL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0034","azienda":"ITD","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0035","azienda":"JORIO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0036","azienda":"LASERLAM","data":"2025-10-17","tipo":"Appunti","referente":"BERTRAND LUCHINO","note":"VISITATO IL SITO"},{"id":"v0037","azienda":"LIVE-TECH","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, PRESO ORDINE DA 1600€ SU 28MILA DI PREVENTIVI"},{"id":"v0038","azienda":"LL LAVORAZIONI LAMIERE","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0039","azienda":"LUCENOVA SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0040","azienda":"MARIO PINTO SPA","data":"2025-10-17","tipo":"Appunti","referente":"FRANCESCA","note":"VISITATO IL SITO, HA FATTO RICHIESTA A LUGLIO 2025 PER UN PROFILO A U CHE NON HA CONFERMATO. FRANCESCA DEVE PARLARE CON IL SUO COLLEGA (PROBABILE RESP. ACQUISTI). SONO DEL GRUPPO AUTOBLOK."},{"id":"v0041","azienda":"MECCANIA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0042","azienda":"MET ITALIA SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0043","azienda":"METALPLAST SOPRANA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, FATTURANO 3,6 MILIONI, BEL BILANCIO, SETTORE MOVIMENTO TERRA"},{"id":"v0044","azienda":"MGM ROBOTICS","data":"2025-10-17","tipo":"Appunti","referente":"JESSICA","note":"VISITATO IL SITO"},{"id":"v0045","azienda":"MODAR","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, FANNO ALLESTIMENTI NEGOZI LUXURY"},{"id":"v0046","azienda":"MULTITEL PAGLIERO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0047","azienda":"NUOVA BN","data":"2025-10-17","tipo":"Appunti","referente":"PAOLO LISI","note":"VISITATO IL SITO"},{"id":"v0048","azienda":"NUOVA TECNO TAU","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0049","azienda":"OTS ASSEMBLY","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0050","azienda":"P&P ITALIA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0051","azienda":"PFM SPA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, UNA SORTA DI TLM CHE CI HA CREDUTO MOLTO DI PIU', FATTURANO 92 MILIONI"},{"id":"v0052","azienda":"POGLIANO BUSBAR","data":"2025-10-17","tipo":"Appunti","referente":"GIUSEPPE BARBERO","note":"VISITATO IL SITO"},{"id":"v0053","azienda":"RSA AUTOMAZIONI","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0054","azienda":"SACMI","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0055","azienda":"SANTIANO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0056","azienda":"SCAM","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0057","azienda":"SL BRANDIZZO","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, LAVORAZIONE DI TUBI IN ALLUMINIO, FIDO??"},{"id":"v0058","azienda":"SPEA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0059","azienda":"TECNO EDM SRL","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0060","azienda":"TEKFER","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, SONO IL CAPOGRUPPO DI ALUTRON"},{"id":"v0061","azienda":"TEKNO ALFA","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, COMPRA DA SCROSOPPI"},{"id":"v0062","azienda":"TERMOMACCHINE","data":"2025-10-17","tipo":"Appunti","referente":"DOTT.SSA GENOVESE\nANDREA PIRAS","note":"NON COMPRA PIÙ' DA OCAT PERCHÉ' NON GLI HANNO GESTITO DELLE URGENZE E SI E' SCOCCIATO, HA INIZIATO A COMPRARE DA SCROSOPPI MA NON GLI PIACE IL MATERIALE."},{"id":"v0063","azienda":"TESIO COOLING","data":"2025-10-17","tipo":"Appunti","referente":"FRANCO","note":"VISITATO IL SITO, FIDO???"},{"id":"v0064","azienda":"TLM","data":"2025-10-17","tipo":"Appunti","referente":"DOMENICO MESSINA\nMASSIMILIANO","note":"VISITATO IL SITO"},{"id":"v0065","azienda":"TONON","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0066","azienda":"TPF","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO"},{"id":"v0067","azienda":"TS","data":"2025-10-17","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, COMPRANO DA AIROLDI"},{"id":"v0068","azienda":"ALPA MECCANICA","data":"2025-10-20","tipo":"Appunti","referente":"MICHELE MOLA\nELENA","note":"COMPRANO DA PFA E METALPLAST. STANNO FACENDO UN PO' DI CASSA INTEGRAZIONE."},{"id":"v0069","azienda":"BAGLIETTO","data":"2025-10-20","tipo":"Appunti","referente":"","note":"https://www.baglietto.eu/products-bulb-flats/"},{"id":"v0070","azienda":"CREDA ENTERPRISE","data":"2025-10-20","tipo":"Appunti","referente":"DAVIDE CREDARO","note":"CLIENTE PFA"},{"id":"v0071","azienda":"FRIMED","data":"2025-10-20","tipo":"Appunti","referente":"","note":"https://www.frimed.it/"},{"id":"v0072","azienda":"RGV","data":"2025-10-20","tipo":"Appunti","referente":"","note":"AFFETTATRICI"},{"id":"v0073","azienda":"SIMIC","data":"2025-10-20","tipo":"Appunti","referente":"","note":"GABRIELE?"},{"id":"v0074","azienda":"ACT EUROPE SRL","data":"2025-10-21","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, FINO A LUGLIO FATTO PREZZI FAMIGLIA C, PAPABILE FAMIGLIA A/B"},{"id":"v0075","azienda":"ADI SPORT","data":"2025-10-21","tipo":"Appunti","referente":"","note":"FIDO 10,000. SEGUE VALENTINA"},{"id":"v0076","azienda":"ADM LASER","data":"2025-10-21","tipo":"Appunti","referente":"","note":"LASERISTA, COMPRA ANCHE DA AVIOMETAL, PRIMALL E OCAT, NON FA I VOLUMI DI LASERLAM E LASERGATE. SEGUE MANU"},{"id":"v0077","azienda":"AE APPARECC. ELETT.","data":"2025-10-21","tipo":"Appunti","referente":"FRANCESCA MARCATO","note":"ULTIMI PREVENTIVI DI LUGLIO MA NON COMPRANO DA FEBBRAIO. SEGUE DARIA"},{"id":"v0078","azienda":"AGNELLA BIAGIO","data":"2025-10-21","tipo":"Appunti","referente":"","note":"VISITATO IL SITO. HANNO COMPRATO SOLO LA LAMIERA FORATA. PREVENTIVI PIASTRE NON CONVERTITI. BEL POTENZIALE. SEGUE DARIA"},{"id":"v0079","azienda":"AGRICOOLTUR","data":"2025-10-21","tipo":"Appunti","referente":"","note":"VISITATO IL SITO, SISTEMI DI COLTIVAZIONE VERTICALE. DUE PREVENTIVI A SETTEMBRE/OTTOBRE, FORSE GESTITI MALE, RISENTIRE."},{"id":"v0080","azienda":"AIGLE MACCHINE","data":"2025-10-21","tipo":"Appunti","referente":"","note":"04/05/2022 FIDO €5000 R030"},{"id":"v0081","azienda":"AIP PORTE","data":"2025-10-21","tipo":"Appunti","referente":"","note":"CONSOCIATA STARK. NON COMPRA DA GIUGNO"},{"id":"v0082","azienda":"ALUTRON","data":"2025-10-21","tipo":"Appunti","referente":"","note":"SEGUE DARIA"},{"id":"v0083","azienda":"AM ATTREZZATURE MECCANICHE","data":"2025-10-21","tipo":"Appunti","referente":"FRANCESCA MARRAZZO","note":"R060 FIDO 5,000"},{"id":"v0084","azienda":"ARME SRL","data":"2025-10-21","tipo":"Appunti","referente":"","note":"COMPRA LAMIERA DA AVIOMETAL"},{"id":"v0085","azienda":"BORNEGO E TRUCCO","data":"2025-10-21","tipo":"Appunti","referente":"","note":"LAVORAZIONE LAMIERA E IMBUTITURA, STAMPAGGIO, TAGLIO LASER"},{"id":"v0086","azienda":"CAL-TECH","data":"2025-10-21","tipo":"Appunti","referente":"","note":"INSOLUTO?"},{"id":"v0087","azienda":"CAMSS","data":"2025-10-21","tipo":"Appunti","referente":"MARCO IRDE","note":"FRESATO E BARRA. CHIAMARE GIOVEDÌ' 23/10 PER PRENDERE APPUNTAMENTO"},{"id":"v0088","azienda":"CAYRE","data":"2025-10-21","tipo":"Appunti","referente":"","note":"USANO 2011 Ø60 E Ø70. ANCHE OTTONE."},{"id":"v0089","azienda":"GEOFER","data":"2025-10-21","tipo":"Appunti","referente":"","note":"DISTRIBUTORE DI FERRO CHE FA ANCHE RICHIESTE DI ALLUMINIO"},{"id":"v0090","azienda":"GIORIO","data":"2025-10-21","tipo":"Appunti","referente":"","note":"VERIFICARE CHE SIA QUELLO DI MONTA'"},{"id":"v0091","azienda":"GS & T","data":"2025-10-21","tipo":"Appunti","referente":"","note":"CONSOCIATA DI OTS ASSEMBLY"},{"id":"v0092","azienda":"LA TAVOLA","data":"2025-10-17","tipo":"Visita","referente":"OSCAR CAVAGLIONO","note":"PRODUCONO ALLESTIMENTI INTERNI PER HOTEL E RISTORANTI DI LUSSO. USANO LE BANDELLE DI ALLUMINIO PER RINFORZO."},{"id":"v0093","azienda":"MECVIL","data":"2025-10-21","tipo":"Appunti","referente":"FRANCESCO","note":""},{"id":"v0094","azienda":"MET ACCIAI","data":"2025-10-21","tipo":"Appunti","referente":"","note":"DISTRIBUTORE DI FERRO CHE FA ANCHE RICHIESTE DI ALLUMINIO"},{"id":"v0095","azienda":"OLMA","data":"2025-10-21","tipo":"Appunti","referente":"","note":"BARRE"},{"id":"v0096","azienda":"OMAS","data":"2025-10-21","tipo":"Appunti","referente":"","note":"PIASTRE E BARRE"},{"id":"v0097","azienda":"OMBI SRL","data":"2025-10-21","tipo":"Appunti","referente":"DAVIDE RICCARDINO","note":"PRODUTTORI MACCHINE PER FARE GIOIELLI. COMPRANO ANCHE DA COMM. FOND. VALUTARE SE PASSANDO A RIBA 60 GG AUMENTANO GLI ORDINI. ORA HANNO FIDO 10,000 RIBA 30 GG."},{"id":"v0098","azienda":"PIACENZA MECCANICA","data":"2025-10-21","tipo":"Appunti","referente":"","note":"NEL 2025 HANNO COMPRATO QUALCOSINA SOLO A GIUGNO. RICHIESTO APPUNTAMENTO PER MARTEDì 28/10"},{"id":"v0099","azienda":"PRINCIPI","data":"2025-10-21","tipo":"Appunti","referente":"FRANCESCO PRINCIPI","note":"VOGLIONO CHE I DIVERSI SPESSORI SIANO DIVISI SU PIÙ' PEDANE"},{"id":"v0100","azienda":"PROTOIN","data":"2025-10-21","tipo":"Appunti","referente":"","note":"6016"},{"id":"v0101","azienda":"SIDER","data":"2025-10-21","tipo":"Appunti","referente":"","note":"DISTRIBUTORE DI FERRO CHE FA ANCHE RICHIESTE DI ALLUMINIO"},{"id":"v0102","azienda":"SMELL","data":"2025-10-21","tipo":"Appunti","referente":"","note":"FIDO?"},{"id":"v0103","azienda":"VIBEL","data":"2025-10-21","tipo":"Appunti","referente":"GIANLUCA","note":"2025 ABBIAMO FATTO 70 MILA EURO DI PREVENTIVI, ORDINATI NEANCHE 10MILA."},{"id":"v0104","azienda":"GATTINO SRL","data":"2025-10-28","tipo":"Appunti","referente":"ANTONELLO BRAGAGNOLO","note":"CARPENTERIA E TAGLIO LASER, STANNO UTILIZZANDO POCO NULLA ALLUMINIO ORA COME ORA"},{"id":"v0105","azienda":"AA MODELLERIA SRL","data":"2025-10-30","tipo":"Visita","referente":"FRANCESCA","note":"CONSOCIATA ANGELINO ARTWORKS. COMPRANO PER OLTRE 3 MIO/ANNO. FIDO 10.000€ AUMENTABILE. FATTO QUALCHE PREVENTIVO, MAI COMPRATO. SEGUE TERESA - VISITA CON FRANCESCA: COMPRA DA SCROSOPPI QUANDO GLI SERVONO PIASTRE SENZA CERT, GUARDA SOLO IL PREZZO, PER IL RESTO, PRINCIPALMENTE ERGAL SI APPOGGIA AD AVIOMETAL, METALPLAST E OCAT."},{"id":"v0106","azienda":"ACT EUROPE SRL","data":"2025-12-02","tipo":"Email","referente":"SABRINA NEGRO","note":"HANNO SCRITTO: la presente per informarVi che, al momento, non possiamo ricevere visite da parte di fornitori esterni.\nQualora fossimo interessati ai Vostri servizi o necessitassimo di ulteriori informazioni, saremo noi a ricontattarvi direttamente.\nVi ringraziamo per la comprensione e restiamo a disposizione per eventuali comunicazioni via mail.\nIN RIFERIMENTO ALLA MIA RICHIESTA DI APPUNTAMENTO DEL 28/11"},{"id":"v0107","azienda":"ALPA MECCANICA","data":"2025-12-19","tipo":"Telefonata","referente":"ELENA","note":"ELENA E' LA MOGLIE DI MICHELE"},{"id":"v0108","azienda":"ALPA MECCANICA","data":"2025-12-22","tipo":"Visita","referente":"MICHELE MOLA","note":"HANNO LASCIATO 2A COME CLIENTE PERCHE' SI SONO ROTTI, TROPPO ROMPI PALLE. IN ESTATE 2026 SI TRASFERISCONO, VANNO IN STRADA DEL FRANCESE A BORGARO."},{"id":"v0109","azienda":"CFGM","data":"2025-12-22","tipo":"Visita","referente":"CONFORTI","note":"HA INIZIATO A LAVORARE CON CIEMMEBI E EXAGON"},{"id":"v0110","azienda":"LISTELLO LUCA OFF. MECC.","data":"2025-12-22","tipo":"Appunti","referente":"","note":"PAGATORE IN RITARDO"},{"id":"v0111","azienda":"MTH","data":"2025-12-22","tipo":"Appunti","referente":"","note":"IN SEGUITO ALLA VISITA DA CFGM, CONFORTI HA DETTO CHE GLI FATTO CONCORRENZA PER DEI LAVORI PER CUI VIENE UTILIZZATO BARRAME"},{"id":"v0112","azienda":"RG TECH","data":"2025-12-22","tipo":"Visita","referente":"ROB. LILLO","note":"CI PROVA A METTERE IN CONTATTO CON ILAS SIG. CONTE, DEVONO PASSARE DALLA 1050 ALLA 5083 PER EMISS. C02"},{"id":"v0113","azienda":"D ENGINEERING","data":"2025-12-22","tipo":"Appunti","referente":"","note":"VERIFICARE CHE SIA QUELLO DI VIA REISS ROMOLI"},{"id":"v0114","azienda":"EMMEGI SCS","data":"2025-12-22","tipo":"Appunti","referente":"","note":"GLI HA DATO IL CONTATTO FRACCARO DI GS MERCALLESE E COMPRANO DA NOI DA QUEL MOMENTO"},{"id":"v0115","azienda":"LMP2","data":"2025-12-22","tipo":"Appunti","referente":"GIUSEPPE GUGGINO","note":"LAVORAZIONI MECCANICHE DI PRECISIONE"},{"id":"v0116","azienda":"CENTINAL","data":"2025-12-23","tipo":"Appunti","referente":"","note":"CERPENTERIA, COSTRUISCONO TETTOIE E GABBIE PER CANI."},{"id":"v0117","azienda":"CENTINAL","data":"2025-12-23","tipo":"Visita","referente":"OBERTI MASSIMO","note":"CONSEGNA PANETTONE. HA CHIESTO UN'OFFERTA PER T.QUADRO 25X1,5 E OVALE 30X15 O SIMILE, ENTRAMBI ANODIZZATI."},{"id":"v0118","azienda":"OLMEDO SPECIAL VEHICLES","data":"2025-12-23","tipo":"Appunti","referente":"","note":"FANNO ALESTIMENTI DI FURGONI, AMBULANZE, MEZZI PER DISABILI, MINIBUS, SCUOLABUS, VEICOLI SPECIALI. CONSUMANO LAMIERA GRANA DI RISO, CHE OGNI TANTO COMPRANO PER LA CRAEM DI SETTIMO (LORO FORNITORE) E POI PRENDONO DEL T.TONDO 30X1,5 IN AISI 304."},{"id":"v0119","azienda":"OLMEDO SPECIAL VEHICLES","data":"2025-12-23","tipo":"Visita","referente":"MARCO PROVENZANO","note":"CONSEGNA PANETTONE. NUOVO STABILIMENTO, AVEVANO UN ALBERO DI NATALE BELLISSIMO (ALLA PROSSIMA VISITA, CHIEDERE QUALE SEDE HA VINTO LA GARA DEGLI ALBERI) E L'AUTO ALL'INGRESSO E' UNA FIAT MUSONE."},{"id":"v0120","azienda":"OM PROJECT","data":"2025-12-19","tipo":"Visita","referente":"LINO PETRUZZO","note":"CONSEGNA CESTA NATALE CON DAVIDE. LAVORANDO TANTO CON AZIMUTH, PER LA QUESTIONE DAZI, HANNO DIMINUITO PARECCHIO I VOLUMI. NON GIUSTIFICA PERO' IL TAGLIO AMPIO AGLI ACQUISTI IN COMEFI, DOVUTI PIU' A QUESTIONI DI PREZZI E DISPONIBILITA. OBIETTIVO 2026 E' RITIRARE SU GLI ACQUISTI."},{"id":"v0121","azienda":"GAA","data":"2025-12-19","tipo":"Visita","referente":"ALBERTO GIRODO","note":"COMPRANO DA SCROSOPPI PIASTRE E BARRE. EX CLIENTE DI COMEFI DI CORSO ROSSELLI, NON HA PIU' COMPRATO DA QUANDO L'AVEVANO TRATTATO MALE AL TEMPO. HA COMPRATO PER UN PERIODO ANCHE DA OCAT E METALPLAST. USA MOLTO ALLUMINIO E FA ANODIZZARE, POTENZIALE CLIENTE TOP PER COMEFI E ALLEGRETTI."},{"id":"v0122","azienda":"GARIGLIO MECCANICA","data":"2026-01-07","tipo":"Appunti","referente":"","note":"CHIUSO DEFINITIVAMENTE"},{"id":"v0123","azienda":"ACMI SPA","data":"2026-01-07","tipo":"Email","referente":"","note":"MANDATA MAIL DI PRESENTAZIONE AD INFO, MONITORARE A DISTANZA. FANNO IMBOTTIGLIATRICI E PACKAGING."},{"id":"v0124","azienda":"BELTECH","data":"2026-01-08","tipo":"Telefonata","referente":"ROBERTO MARENGO","note":"HO PARLATO CON ROBERTO, LUI SI OCCUPA DELLE RICHIESTE MA NON TUTTE, VALERIA INVECE FA RICHIESTE E ACQUISTI. MEGLIO CREARE RAPPORTO CON ENTRAMBI."},{"id":"v0125","azienda":"HONESTAMP","data":"2026-01-08","tipo":"Appunti","referente":"SIMONE","note":"STAMPATORI, POTENZIALE CLIENTE FAMIGLIA A MA DA SVILUPPAE MEGLIO. SONO FORNITORI DI SBF, GLI STAMPANO IN CONTO LAVORO DELLE STAFFE, VENGONO A RITIRARE PER LORO L'ULTIMO RODINE."},{"id":"v0126","azienda":"SBF TECHNICAL SOLUTIONS S.R.L.","data":"2026-01-08","tipo":"Appunti","referente":"BARBARA","note":"EX SBF TUBI. SONO UNA BUONA REALTA' MA NON HANNO ANCORA PUBBLICATO BILANCI. CONCESSA RIBA 30 PERCHE' TANTO L'ORDINE NON E' ALTO, VERIFICARE DI VOLTA IN VOLTA, APPROFONDIRE IL DISCORSO IN APPUNTAMENTO.\nCLIENTI DI HONESTAMP, CHE RITIRA IL LORO ULTIMO ORDINE DI LAMIERE."},{"id":"v0127","azienda":"SBF TECHNICAL SOLUTIONS S.R.L.","data":"2026-01-12","tipo":"Visita","referente":"BARBARA E FABIO","note":"NON HANNO ANCORA PUBBLICATO BILANCI PERCHE' LA SOCIETA' E' RECENTE, SI SONO RIDIMENSIONATI, DIMINUENDO DI PARECCHIO ANCHE I DIPENDENTI. COLLABORANO CON FODISA, HONESTAMP E SIMA DI NARDO STEFANO. LAVORANO CON TUBI E NASTRI, PRINCIPALMENTE NELL'AUTOMOTIVE. CONOSCONO ALLEGRETTI. BARBARA DICE CHE SE NON CAMBIANO UN PO' LE IDEE RISCHIANO DI CHIUDERE IN 2/3 ANNI.CONSUMANO ANCHE PARECCHI TUBI, SIA IN ALLUMINIO HCE IN RAME, A ROTOLI, PER IL SETTORE DELLA REFRIGERAZIONE."},{"id":"v0128","azienda":"SIMA DI NARDO STEFANO","data":"2026-01-12","tipo":"Appunti","referente":"STEFANO","note":"CONTATTO DATO DA BARBARA DI SBF DI LEINI', SONO LORO FORNITORI. COSTRUISCONO STAMPI."},{"id":"v0129","azienda":"FIDIA MACCHINE GRAFICHE SRL","data":"2026-01-15","tipo":"Telefonata","referente":"CLAUDIO BONINO","note":"CHIAMARE DOMANI E CHIEDERE DI CLAUDIO BONINO"},{"id":"v0130","azienda":"RECARO - RIVOLI","data":"2026-01-22","tipo":"Appunti","referente":"","note":"EX SFC COMPOSITI. CONSOCIATA RECARO CASELETTE."},{"id":"v0131","azienda":"RECARO - RIVOLI","data":"2026-01-22","tipo":"Visita","referente":"DANIELA","note":"CONSEGNATO CATALOGO. STANNO LAVORICCHIANDO, NON SONO MOLTO ORGANIZZATI"},{"id":"v0132","azienda":"OTS ASSEMBLY","data":"2026-01-20","tipo":"Appunti","referente":"GIAMPIERO FERRERO","note":"COMPRSNO DA OCAT E METALPLAST."},{"id":"v0133","azienda":"OTS ASSEMBLY","data":"2026-01-20","tipo":"Visita","referente":"GIAMPIERO FERRERO","note":"VISITA ANDATA BENE, ABBIAMO PRESO IL PRIMO ORDINE."},{"id":"v0134","azienda":"PERANO SPA","data":"2026-02-18","tipo":"Visita","referente":"SIMONA","note":"VISITATO CON DAVIDE, PARLATO CON SIMONA. UTILIZANO MAGNELIS PER MOVINTER, LAMIERE 5754 H111 4000x2000X4 E 3000X1500X3 PER LA OMAS, LAMIERE MANDORLATE 3 + BUGNA PER LA MERLO. UTILIZZANO PIU' ACCIAIO, CON L'ALLUMINIO SONO APPOSTO FINO ALL'ESTATE. MANDARE MAILCIN OFFERTA E FARSI RISENTIRE A MAGGIO/GIUGNO PER GLI ORDINI A PROGRAMMA NUOVI SULL'ALLUMINIO."},{"id":"v0140","azienda":"PRINCIPI","data":"2026-03-11","tipo":"Visita","referente":"","note":""},{"id":"v0141","azienda":"LISTELLO LUCA OFF. MECC.","data":"2026-03-11","tipo":"Visita","referente":"","note":""},{"id":"v0142","azienda":"SAMIND","data":"","tipo":"Visita","referente":"","note":""}];
+const DD_N = [{"id":"n0001","azienda":"MECCANIA","testo":"PASSARE A TROVARE","data":"2026-02-19","priorita":"Media","fatto":false},{"id":"n0002","azienda":"VER-MEC","testo":"PRENDERE APPUNTAMENTO","data":"2026-02-19","priorita":"Media","fatto":false},{"id":"n0003","azienda":"PROMEK ROBOTIC SOLUTION SRL","testo":"PASSARE A TROVARE NUOVAMENTE, NON SI SENTONO DA SETTEMBRE","data":"2026-02-20","priorita":"Media","fatto":false},{"id":"n0004","azienda":"STEAT SRL","testo":"DAVIDE HA GIRATO RICHIESTA A DARIA, CONTATTARE DOPO L'OFFERTA","data":"2026-02-20","priorita":"Media","fatto":false},{"id":"n0005","azienda":"PERANO SPA","testo":"richiesta profilglass","data":"","priorita":"Media","fatto":false},{"id":"n0006","azienda":"TELMA","testo":"richiamare","data":"","priorita":"Media","fatto":false}];
+const SHEET_ID = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
+const LISTA_NOMI = 'AA MODELLERIA SRL, ACMI SPA, ACT EUROPE SRL, ADI SPORT, ADM LASER, AE APPARECC. ELETT., AF AUTOMAZIONI, AGLA POWER TRASMISS, AGNELLA BIAGIO, AGRICOOLTUR, AIGLE MACCHINE, AIP PORTE, ALPA MECCANICA, ALUTRON, AM ATTREZZATURE MECCANICHE, AMBROSIO, AMERIO & C. SRL, AMP MECCANICA, AMPRIMO, AMR SRL, ANORS, ARMA SRL, ARME SRL, ARMENI E RAISE, ART-CAR, ARTIOLI PUBBLICITA\', ASSEL, AUNDE ITALIA, AUTOBLOK, AUTOMATION SERVICE TORINO, AVIP, BAGLIETTO, BALDO MODELLI, BASCO SRL, BATTAGLIOTTI, BBV GLASS, BCE, BELTECH, BERTAGLIA MODELLI, BERTINO VALENTINO, BIEMMEDUE SPA, BIG ONE, BISIACH & CARRU\', BITRON, BM CONCEPT, BONETTO CV, BONETTO SRL, BORDONE ALLESTIMENTI, BORNEGO E TRUCCO, BOSCO ITALIA, BRAMBATI SPA, BUSSI MARIO & C. SAS, C3 SRL, CAF, CAL-TECH, CAM SRL, CAMEL, CAMSS, CANGINI, CARPENTECNICA GROUP SRL, CARPENTERIA CARENA, CASAVECCHIA COSTR. MECC., CATTELINO GIOVANNI, CAYRE, CCM FINOTELLO, CEAN, CEDI, CENTINAL, CEPI RACK, CFGM, CHIALES TOOLS & PROJECT SRL, CIEMMEBI, CMA SRL, CMB INDUSTRIES SRL, CMF FORNASINO, CMM SRL, COL GIOVANNI PAOLO, COLD CAR, COLOMBINI, COMATIC, COMMERCIALE FOND, COMMERCIALE SIDERURGICA CUNEESE, CONTE SRL, COPRAUTO SRL, CORIMAMET, COTREL, COUNTRY LAB, COVI, CREDA ENTERPRISE, CSA, CSL INDUSTRIALE, CTS, CUSTOM 2,0, D ENGINEERING, DAME, DAMILANO GROUP, DANISI ENGINEERING, DE WAVE, DEMI SPA, DM MECCANICA, DM PACKAGING, DUTTO ILARIO, ECS, EKO SRL, ELECTRADUE, ELECTRO-PARTS SPA, ELSY, EMMEGI SCS, ERGOTECH, EURODIES, EUROMEC 2000, EUROSTAMP 1, F.LLI LATINI, F.LLI LUCCO-BORLERA, FIBET, FODISA, FONDERIA SAN FERMO, FRAMIC, FRANCHINO SRL, FRE&FREA, FRIMED, FTR, GAA, GAI MACCHINE SPA, GALEASSO, GALLETTO RADIATORI, GALOSSO GIOVANNI, GARIGLIO MECCANICA, GATTINO SRL, GB MECCANICA, GDR, GEOFER, GHISALBA, GIGLIO ATTREZ. E STAMPI, GINALCO, GIORDANO ALLESTIMENTI, GIORDANO LAMIERE, GIORIO, GIOVARA MECCANICA, GOLDEN CAR, GOMA ELETTRONICA, GP TECNICA, GRAZIADIO, GROB, GS & T, GS MERCALLESE, GUIDA, HANGAR, HB TECHNOLOGY, HBTS, HONESTAMP, HS SRL, ICOM, ILAS, ILMED, IMA TELEROBOT, IMPICCICHE AGOSTINO, INDUCTION, INOXTEK, INTERFIERE, IPAS SPA, IRONCUT SRL, ISCM, ITALPLANT, ITALPOOL, ITD, JORIO, K-TRONIC, LA TAVOLA, LABORMEC, LASERGATE, LASERLAM, LDA DESIGN, LISA INDUSTRIE, LISTELLO LUCA OFF. MECC., LITA, LIVE-TECH, LL DI LANOTTE, LL LAVORAZIONI LAMIERE, LMP2, LUCENOVA SRL, LUMALAB, LUMEC, LUMILIGHT, MABO SRL, MARIO PINTO SPA, MARZERO SAS, MAST MECCANICA, MCM DI MASERA, MCTECH, MDC DESIGN, MECCANIA, MECVIL, MERLO SRL, MET ACCIAI, MET ITALIA SRL, METAL CONTAINER, METALPLAST SOPRANA, METALTECNICA SRL, MF MELE, MGM ROBOTICS, MISA SNC, MIV INSULATING SYSTEMS SRL, MLLA, MODAR, MOVINTER, MTE, MTH, MULTITEL PAGLIERO, NABTESCO OCLAP, NANCHINO AUTOMAZ. IND., NC2 GRID, NG RUSCONI, NKE AUTOMATION, NOGI, NORD LEGNAMI GROUP SRL, NOVO, NUOVA ARMANDI, NUOVA BN, NUOVA SIMACH, NUOVA TECNO TAU, NUOVA TFM, OCF DI AGHEMO, OFFICINE ABRIOLA, OFFICINE BERTOLOTTI, OFFICINE GAUDINO, OLIVOTTO, OLL, OLMA, OLMEDO SPECIAL VEHICLES, OM PROJECT, OM3, OMAP, OMAR TECHNOLOGIES, OMAR VEICOLI INDUSTRIALI, OMAS, OMBI SRL, OMEK, OMER PRODUZIONE, OMG, OMG MANUFACTURING, OMLER 2000, OPAC MARE, OTS ASSEMBLY, P&P ITALIA, PALASER, PALUMBO LEGNAMI, PETRAMAR, PETRAMAR, PFM SPA, PIACENZA MECCANICA, PISCAZZI, PL&TL, PLAF, PODIUM, POGLIANO BUSBAR, PREMEC, PRINCIPI, PROIETTA, PROMOD, PROTOIN, PUSPACE, RACK PERUZZI, RG TECH, RGV, RIVESTAUTO, RPG, RSA AUTOMAZIONI, SACMI, SAFET, SAMEC, SAMSON GROUP, SANTIANO, SARVADON, SBF TECHNICAL SOLUTIONS S.R.L., SCAET, SCAM, SHANTI GSA, SIDER, SILATECH, SIMA DI NARDO STEFANO, SIMIC, SIMPRO, SIRN, SL BRANDIZZO, SMAT NORD, SMELL, SOLA NEON, SPARK, SPEA, STARK, STP SCALE, SYNTAX, TAURUS SAGES, TECNO EDM SRL, TECNO LAMIERA, TECNO TAU, TECNOFER, TECNOMEC, TEKFER, TEKNO ALFA, TELMA, TEMA, TERMOMACCHINE, TESIO COOLING, TLM, TLM, TONON, TOVO, TPF, TPRO, TRASPARENTE, TRELLEBORG, TS, TUXOR, UNICABLE, VIBEL, WINGECO, WOODEX, ZETA MECCANICA, FIDIA MACCHINE GRAFICHE SRL, VM SRL, F.S. MODELLI S.R.L., TEKNEL CONSULT SRL, DTE SRL, ONEDGE, RECARO - CASELETTE, RECARO - RIVOLI, PERANO SPA, VER-MEC, PROMEK ROBOTIC SOLUTION SRL, FERRARI & CARENA, STEAT SRL, SAMIND';
+
+/* ══════════════════════════════════════════════════════════
+   STATO
+══════════════════════════════════════════════════════════ */
+const S = k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch { return null; } };
+const W = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} };
+
+// Versione — se cambia, resetta tutto
+const VER = 'v4.0';
+if (S('_ver') !== VER) {
+  ['_clienti','_visite','_note','_mail'].forEach(k => localStorage.removeItem(k));
+  W('_ver', VER);
+}
+
+let clienti = S('_clienti') || JSON.parse(JSON.stringify(DD_C));
+let visite  = S('_visite')  || JSON.parse(JSON.stringify(DD_V));
+let note    = S('_note')    || JSON.parse(JSON.stringify(DD_N));
+let mailLog = S('_mail')    || [];
+
+// Verifica integrità: se clienti < 300, ricarica dal file
+if (clienti.length < 300) { clienti = JSON.parse(JSON.stringify(DD_C)); W('_clienti', clienti); }
+
+/* ══════════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════════ */
+const uid  = () => Math.random().toString(36).slice(2,9);
+const ini  = s => (s||'?').split(/[\s|]+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const esc  = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const fd   = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fs   = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'short'}) : '—';
+const oggi = () => new Date().toISOString().slice(0,10);
+
+const STATI = ['Visitare regolarm.','Contatto a distanza','Visitare in zona','Consulente','Prospect','Inattivo'];
+const SCL   = {'Visitare regolarm.':'bg','Contatto a distanza':'bb','Visitare in zona':'ba','Consulente':'brs','Prospect':'bgr','Inattivo':'br'};
+const TVI   = {'Visita':'bg','Email':'bml','Telefonata':'bph','Appunti':'bgr','Offerta inviata':'brs'};
+const PRC   = {'Alta':'br','Media':'ba','Bassa':'bg'};
+const TVISITA = ['Visita','Appunti','Telefonata','Email','Offerta inviata','Post-vendita','Video call'];
+
+/* ══════════════════════════════════════════════════════════
+   NAVIGAZIONE
+══════════════════════════════════════════════════════════ */
+function go(id, btn) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='clienti') renderClienti();
+  if(id==='visite')  renderVisite();
+  if(id==='att')     renderAtt();
+  if(id==='mail')    { syncSheets(); renderMail(); }
+  if(id==='report')  renderReport();
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════════════════ */
+function openMo(html) {
+  document.getElementById('mo-body').innerHTML = html;
+  document.getElementById('mo-ov').style.display = 'flex';
+}
+function closeMo() { document.getElementById('mo-ov').style.display = 'none'; }
+
+/* ══════════════════════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════════════════════ */
+function badges() {
+  const pend = note.filter(n=>!n.fatto).length;
+  const scad = note.filter(n=>!n.fatto&&n.data&&n.data<oggi()).length;
+  const ba = document.getElementById('bn-att');
+  if(pend>0){ba.style.display='flex';ba.textContent=pend;ba.style.background=scad>0?'var(--red)':'var(--rust)';}
+  else ba.style.display='none';
+  const bm = document.getElementById('bn-mail');
+  const nuove = mailLog.filter(m=>(m.SALVATO_CRM||m.salvato_crm)!=='SI').length;
+  if(nuove>0){bm.style.display='flex';bm.textContent=nuove;}
+  else bm.style.display='none';
+}
+
+/* ══════════════════════════════════════════════════════════
+   SHEETS SYNC
+══════════════════════════════════════════════════════════ */
+async function syncSheets() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG`;
+    const res = await fetch(url);
+    const txt = await res.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return;
+    const data = JSON.parse(match[1]);
+    if (!data.table?.rows?.length) return;
+    const cols = data.table.cols.map(c=>c.label);
+    mailLog = data.table.rows.map(row=>{
+      const o={};
+      row.c.forEach((cell,i)=>{ o[cols[i]] = cell?.v ?? ''; });
+      return o;
+    });
+    W('_mail', mailLog);
+    renderMail();
+    badges();
+  } catch(e) { console.warn('Sheets sync:', e.message); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   CLIENTI
+══════════════════════════════════════════════════════════ */
+let clStato = 'Tutti';
+
+function renderClienti() {
+  const q = document.getElementById('cl-q').value.toLowerCase();
+  document.getElementById('cl-cnt').textContent = clienti.length + ' aziende';
+  // Chips
+  const ch = document.getElementById('cl-chips');
+  if (!ch.innerHTML) {
+    ch.innerHTML = ['Tutti',...STATI].map(s=>
+      `<button class="chip${s===clStato?' on':''}" onclick="setClStato('${esc(s)}')">${esc(s)}</button>`
+    ).join('');
+  }
+  let lista = clienti;
+  if (clStato !== 'Tutti') lista = lista.filter(c=>c.stato===clStato);
+  if (q) lista = lista.filter(c=>[c.azienda,c.citta,c.pr,c.contatto].join(' ').toLowerCase().includes(q));
+  document.getElementById('cl-list').innerHTML = lista.length === 0
+    ? '<div style="text-align:center;padding:40px;color:var(--ink3)">Nessun cliente trovato</div>'
+    : lista.map(c=>`
+      <div class="card tap" onclick="detCliente('${c.id}')">
+        <div class="row">
+          <div class="av">${ini(c.azienda)}</div>
+          <div class="ri">
+            <div class="rn">${esc(c.azienda)}</div>
+            <div class="rs">${esc([c.citta,c.pr].filter(Boolean).join(' · '))}</div>
+          </div>
+          <span class="b ${SCL[c.stato]||'bgr'}" style="font-size:10px">${esc((c.stato||'').split('.')[0])}</span>
+        </div>
+      </div>`).join('');
+}
+
+function setClStato(s) {
+  clStato = s;
+  document.getElementById('cl-chips').innerHTML = '';
+  renderClienti();
+}
+
+function detCliente(id) {
+  const c = clienti.find(x=>x.id===id);
+  if (!c) return;
+  const mail1 = (c.mail||'').split(' | ')[0];
+  const tel1  = (c.numero||'').split(' | ')[0].replace(/\s/g,'');
+  openMo(`
+    <div class="mo-ttl">${esc(c.azienda)}<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <span class="b ${SCL[c.stato]||'bgr'}" style="margin-bottom:14px;display:inline-flex">${esc(c.stato)}</span>
+    ${[['Città',([c.citta,c.pr].filter(Boolean).join(' (')+(c.pr?')':''))],['Referente',(c.contatto||'').replace(/\|/g,' · ')],['Telefono',(c.numero||'').replace(/\|/g,' · ')],['Email',(c.mail||'').replace(/\|/g,' · ')],['P. IVA',c.piva],['Ultima visita',fd(c.ultima_visita)]].map(([k,v])=>v&&v!=='nan'?`<div class="dr"><span class="dk">${k}</span><span class="dv" style="font-size:12px">${esc(v)}</span></div>`:'').join('')}
+    ${mail1||tel1?`<div style="display:flex;gap:8px;margin-top:12px">
+      ${mail1?`<a href="mailto:${mail1}" class="btn btn-p btn-sm" style="text-decoration:none;flex:1;justify-content:center">✉ Email</a>`:''}
+      ${tel1?`<a href="tel:${tel1}" class="btn btn-s btn-sm" style="text-decoration:none;flex:1;justify-content:center">📞 Chiama</a>`:''}
+    </div>`:''}
+    <div class="mo-acts">
+      <button class="btn btn-d btn-sm" onclick="delCliente('${c.id}')">Elimina</button>
+      <button class="btn btn-s" onclick="openClienteForm('${c.id}')">Modifica</button>
+      <button class="btn btn-p" onclick="goVisite('${esc(c.azienda)}')">Visite →</button>
+    </div>`);
+}
+
+function openClienteForm(id) {
+  const c = id ? clienti.find(x=>x.id===id) : null;
+  openMo(`
+    <div class="mo-ttl">${c?'Modifica':'Nuovo cliente'}<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <div class="fg"><label class="fl">Azienda *</label><input class="fi" id="f-az" value="${esc(c?.azienda||'')}"></div>
+    <div style="display:grid;grid-template-columns:1fr 72px;gap:8px">
+      <div class="fg"><label class="fl">Città</label><input class="fi" id="f-ci" value="${esc(c?.citta||'')}"></div>
+      <div class="fg"><label class="fl">Prov.</label><input class="fi" id="f-pr" value="${esc(c?.pr||'')}" maxlength="2"></div>
+    </div>
+    <div class="fg"><label class="fl">Referente/i</label><textarea class="fi" id="f-co" rows="2">${esc(c?.contatto||'')}</textarea></div>
+    <div class="fg"><label class="fl">Telefono</label><textarea class="fi" id="f-nu" rows="2">${esc(c?.numero||'')}</textarea></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" id="f-ma" value="${esc(c?.mail||'')}"></div>
+    <div class="fg"><label class="fl">P. IVA</label><input class="fi" id="f-pi" value="${esc(c?.piva||'')}"></div>
+    <div class="fg"><label class="fl">Stato</label><select class="fi" id="f-st">${STATI.map(s=>`<option${s===(c?.stato||'Visitare regolarm.')?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="mo-acts">
+      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
+      <button class="btn btn-p" onclick="saveCliente('${id||''}')">Salva</button>
+    </div>`);
+}
+
+function saveCliente(id) {
+  const az = document.getElementById('f-az').value.trim();
+  if (!az) return;
+  const c = {
+    id: id||uid(), ag:'DAN',
+    azienda:az, citta:document.getElementById('f-ci').value.trim(),
+    pr:document.getElementById('f-pr').value.trim().toUpperCase(),
+    contatto:document.getElementById('f-co').value.trim(),
+    numero:document.getElementById('f-nu').value.trim(),
+    mail:document.getElementById('f-ma').value.trim(),
+    piva:document.getElementById('f-pi').value.trim(),
+    stato:document.getElementById('f-st').value,
+    ultima_visita:''
+  };
+  clienti = id ? clienti.map(x=>x.id===id?{...x,...c}:x) : [...clienti,c];
+  W('_clienti',clienti); closeMo(); renderClienti();
+}
+
+function delCliente(id) {
+  if (!confirm('Eliminare questo cliente?')) return;
+  clienti = clienti.filter(c=>c.id!==id);
+  W('_clienti',clienti); closeMo(); renderClienti();
+}
+
+function goVisite(az) {
+  closeMo();
+  document.getElementById('vi-q').value = az;
+  go('visite', document.querySelector('[data-s="visite"]'));
+}
+
+/* ══════════════════════════════════════════════════════════
+   VISITE
+══════════════════════════════════════════════════════════ */
+function renderVisite() {
+  const q = document.getElementById('vi-q').value.toLowerCase();
+  const sorted = [...visite].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const lista = q ? sorted.filter(v=>v.azienda.toLowerCase().includes(q)) : sorted;
+  document.getElementById('vi-cnt').textContent = visite.length + ' registrazioni';
+  document.getElementById('vi-list').innerHTML = lista.length === 0
+    ? '<div style="text-align:center;padding:40px;color:var(--ink3)">Nessuna visita</div>'
+    : lista.map(v=>`
+      <div class="card tap" onclick="detVisita('${v.id}')">
+        <div class="row" style="margin-bottom:${v.note?'6px':'0'}">
+          <div class="av" style="background:${v.tipo==='Email'?'var(--blue)':v.tipo==='Telefonata'?'var(--green)':'var(--ink2)'}">${ini(v.azienda)}</div>
+          <div class="ri">
+            <div class="rn">${esc(v.azienda)}</div>
+            <div class="rs">${fs(v.data)} · ${v.tipo}${v.referente?' · '+esc(v.referente):''}</div>
+          </div>
+          <span class="b ${TVI[v.tipo]||'bgr'}" style="font-size:10px">${v.tipo}</span>
+        </div>
+        ${v.note?`<div style="font-size:12px;color:var(--ink3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(v.note)}</div>`:''}
+      </div>`).join('');
+}
+
+function detVisita(id) {
+  const v = visite.find(x=>x.id===id);
+  if (!v) return;
+  openMo(`
+    <div class="mo-ttl">${esc(v.azienda)}<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <span class="b ${TVI[v.tipo]||'bgr'}" style="margin-bottom:14px;display:inline-flex">${v.tipo} · ${fd(v.data)}</span>
+    ${v.referente?`<div class="dr"><span class="dk">Referente</span><span class="dv">${esc(v.referente)}</span></div>`:''}
+    ${v.note?`<div style="margin-top:10px;font-size:13px;line-height:1.65;color:var(--ink2)">${esc(v.note)}</div>`:''}
+    <div class="mo-acts">
+      <button class="btn btn-d btn-sm" onclick="delVisita('${v.id}')">Elimina</button>
+      <button class="btn btn-s" onclick="closeMo()">Chiudi</button>
+    </div>`);
+}
+
+function openVisitaForm() {
+  const q = document.getElementById('vi-q').value;
+  openMo(`
+    <div class="mo-ttl">Nuova visita<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <div class="fg"><label class="fl">Azienda *</label><input class="fi" id="fv-az" value="${esc(q)}" list="cl-dl"><datalist id="cl-dl">${clienti.map(c=>`<option value="${esc(c.azienda)}">`).join('')}</datalist></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="fv-da" value="${oggi()}"></div>
+      <div class="fg"><label class="fl">Tipo</label><select class="fi" id="fv-ti">${TVISITA.map(t=>`<option>${t}</option>`).join('')}</select></div>
+    </div>
+    <div class="fg"><label class="fl">Referente</label><input class="fi" id="fv-re"></div>
+    <div class="fg"><label class="fl">Note</label><textarea class="fi" id="fv-no" rows="4"></textarea></div>
+    <div class="mo-acts">
+      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
+      <button class="btn btn-p" onclick="saveVisita()">Salva</button>
+    </div>`);
+}
+
+function saveVisita() {
+  const az = document.getElementById('fv-az').value.trim();
+  if (!az) return;
+  const v = {id:uid(),azienda:az,data:document.getElementById('fv-da').value,tipo:document.getElementById('fv-ti').value,referente:document.getElementById('fv-re').value.trim(),note:document.getElementById('fv-no').value.trim()};
+  visite = [v,...visite]; W('_visite',visite); closeMo(); renderVisite();
+}
+
+function delVisita(id) {
+  visite = visite.filter(v=>v.id!==id); W('_visite',visite); closeMo(); renderVisite();
+}
+
+/* ══════════════════════════════════════════════════════════
+   ATTIVITÀ
+══════════════════════════════════════════════════════════ */
+let attTab = 'todo';
+
+function setAttTab(t,btn) {
+  attTab=t;
+  document.querySelectorAll('#att-tabs .tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderAtt();
+}
+
+function renderAtt() {
+  const sorted = [...note].sort((a,b)=>{
+    if(a.fatto!==b.fatto) return a.fatto?1:-1;
+    const o={Alta:0,Media:1,Bassa:2};
+    return (o[a.priorita]||1)-(o[b.priorita]||1);
+  });
+  const lista = attTab==='todo' ? sorted.filter(n=>!n.fatto) : sorted.filter(n=>n.fatto);
+  const scad  = note.filter(n=>!n.fatto&&n.data&&n.data<oggi()).length;
+  document.getElementById('att-ttl').innerHTML = 'Attività' + (scad>0?` <span class="b br" style="font-size:10px;margin-left:8px">${scad} scad.</span>`:'');
+  document.getElementById('att-cnt').textContent = note.filter(n=>!n.fatto).length + ' da completare';
+  document.getElementById('att-list').innerHTML = lista.length===0
+    ? `<div style="text-align:center;padding:40px;color:var(--ink3)">${attTab==='todo'?'Tutto fatto! 🎉':'Nessuna completata'}</div>`
+    : lista.map(n=>{
+        const sc = !n.fatto&&n.data&&n.data<oggi();
+        return `<div class="card" style="border-left:3px solid ${sc?'var(--red)':n.priorita==='Alta'?'var(--amber)':'var(--bg3)'}">
+          <div class="row">
+            <button onclick="toggleAtt('${n.id}')" style="width:26px;height:26px;border-radius:7px;border:2px solid ${n.fatto?'var(--green)':'var(--bg3)'};background:${n.fatto?'var(--green)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;transition:all .18s">
+              ${n.fatto?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
+            </button>
+            <div class="ri" onclick="detAtt('${n.id}')" style="cursor:pointer">
+              <div class="rn" style="text-decoration:${n.fatto?'line-through':'none'};color:${n.fatto?'#9aabbc':'var(--ink)'}">${esc(n.testo)}</div>
+              <div class="rs">${n.azienda?esc(n.azienda)+' · ':''}${fs(n.data)}${sc?'<span style="color:var(--red);margin-left:4px">Scaduta</span>':''}</div>
+            </div>
+            <span class="b ${PRC[n.priorita]||'bgr'}">${n.priorita}</span>
+          </div>
+        </div>`;
+      }).join('');
+  badges();
+}
+
+function toggleAtt(id) {
+  note = note.map(n=>n.id===id?{...n,fatto:!n.fatto}:n);
+  W('_note',note); renderAtt();
+}
+
+function detAtt(id) {
+  const n = note.find(x=>x.id===id);
+  if (!n) return;
+  openMo(`
+    <div class="mo-ttl">Attività<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <div style="font-size:14px;line-height:1.6;margin-bottom:12px">${esc(n.testo)}</div>
+    ${n.azienda?`<div class="dr"><span class="dk">Azienda</span><span class="dv">${esc(n.azienda)}</span></div>`:''}
+    <div class="dr"><span class="dk">Scadenza</span><span class="dv">${fd(n.data)}</span></div>
+    <div class="dr"><span class="dk">Priorità</span><span class="dv"><span class="b ${PRC[n.priorita]}">${n.priorita}</span></span></div>
+    <div class="mo-acts">
+      <button class="btn btn-d btn-sm" onclick="delAtt('${n.id}')">Elimina</button>
+      <button class="btn btn-s" onclick="closeMo()">Chiudi</button>
+    </div>`);
+}
+
+function openAttForm() {
+  openMo(`
+    <div class="mo-ttl">Nuova attività<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <div class="fg"><label class="fl">Descrizione *</label><textarea class="fi" id="fa-te" rows="3"></textarea></div>
+    <div class="fg"><label class="fl">Azienda</label><input class="fi" id="fa-az" list="cl-dl2"><datalist id="cl-dl2">${clienti.map(c=>`<option value="${esc(c.azienda)}">`).join('')}</datalist></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="fg"><label class="fl">Scadenza</label><input class="fi" type="date" id="fa-da" value="${oggi()}"></div>
+      <div class="fg"><label class="fl">Priorità</label><select class="fi" id="fa-pr"><option>Alta</option><option selected>Media</option><option>Bassa</option></select></div>
+    </div>
+    <div class="mo-acts">
+      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
+      <button class="btn btn-p" onclick="saveAtt()">Salva</button>
+    </div>`);
+}
+
+function saveAtt() {
+  const te = document.getElementById('fa-te').value.trim();
+  if (!te) return;
+  note = [{id:uid(),azienda:document.getElementById('fa-az').value.trim(),testo:te,data:document.getElementById('fa-da').value,priorita:document.getElementById('fa-pr').value,fatto:false},...note];
+  W('_note',note); closeMo(); renderAtt();
+}
+
+function delAtt(id) {
+  note=note.filter(n=>n.id!==id); W('_note',note); closeMo(); renderAtt();
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIL
+══════════════════════════════════════════════════════════ */
+let mlTab = 'all';
+
+// Normalizza riga mail (supporta chiavi maiuscole e minuscole)
+function normMail(m) {
+  const raw  = m.CLIENTE_RICONOSCIUTO || m.cliente_riconosciuto || '';
+  // Prova a estrarre JSON se è testo grezzo
+  let parsed = null;
+  if (raw.includes('{')) {
+    try {
+      const clean = raw.replace(/```json\s*/gi,'').replace(/```/g,'').trim();
+      const match = clean.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+    } catch {}
+  }
+  return {
+    data:     m.DATA     || m.data     || '',
+    tipo:     m.TIPO     || m.tipo     || (parsed?.tipo) || 'IN',
+    da:       m.DA       || m.da       || '',
+    a:        m.A        || m.a        || '',
+    oggetto:  m.OGGETTO  || m.oggetto  || (parsed?.oggetto) || '',
+    corpo:    m.CORPO_BREVE || m.corpo_breve || (parsed?.corpo_breve) || '',
+    cliente:  m.CLIENTE_RICONOSCIUTO_CLEAN || (parsed?.cliente_riconosciuto) || (typeof raw==='string'&&!raw.includes('{') ? raw : '') || '',
+    referente:m.REFERENTE || m.referente || (parsed?.referente) || '',
+    note_ai:  m.NOTE_AI  || m.note_ai  || (parsed?.note) || '',
+    rilevante:(m.RILEVANTE_CRM||m.rilevante_crm)==='SI' || parsed?.rilevante_crm === true,
+    salvato:  (m.SALVATO_CRM||m.salvato_crm) === 'SI',
+  };
+}
+
+function setMailTab(t,btn) {
+  mlTab=t;
+  document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMail();
+}
+
+function renderMail() {
+  const q = document.getElementById('ml-q').value.toLowerCase();
+  const norms = mailLog.map(normMail).sort((a,b)=>b.data.localeCompare(a.data));
+  let lista = norms;
+  if (mlTab==='in')  lista = lista.filter(m=>m.tipo==='IN');
+  if (mlTab==='out') lista = lista.filter(m=>m.tipo==='OUT');
+  if (mlTab==='new') lista = lista.filter(m=>!m.cliente && m.rilevante);
+  if (q) lista = lista.filter(m=>[m.cliente,m.oggetto,m.da,m.a,m.corpo].join(' ').toLowerCase().includes(q));
+  const nuovi = norms.filter(m=>!m.cliente && m.rilevante).length;
+  const tnuovi = document.getElementById('tab-nuovi');
+  if (tnuovi) tnuovi.textContent = nuovi>0?`Nuovi (${nuovi})`:'Nuovi';
+  document.getElementById('ml-cnt').textContent = mailLog.length + ' email' + (nuovi>0?` · ${nuovi} potenziali clienti`:'');
+  document.getElementById('ml-list').innerHTML = lista.length===0
+    ? `<div style="text-align:center;padding:40px;color:var(--ink3)">${mailLog.length===0?'Nessuna email. Il foglio Google Sheets deve essere pubblico in lettura.':'Nessun risultato'}</div>`
+    : lista.map((m,i)=>`
+      <div class="card tap" style="border-left:3px solid ${m.tipo==='IN'?'var(--blue)':'var(--rust)'}" onclick="detMail(${i})">
+        <div class="row" style="margin-bottom:${m.corpo?'6px':'0'}">
+          <div class="av" style="background:${m.tipo==='IN'?'var(--blue)':'var(--rust)'};font-size:18px">${m.tipo==='IN'?'↙':'↗'}</div>
+          <div class="ri">
+            <div class="rn">${esc(m.cliente||m.da.split('@')[0]||'—')}${!m.cliente&&m.rilevante?' <span class="b ba" style="font-size:9px">nuovo?</span>':''}</div>
+            <div class="rs">${esc(m.oggetto||'(nessun oggetto)')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:10px;color:var(--ink3)">${fs(m.data)}</div>
+            ${m.salvato?'<span class="b bg" style="font-size:9px;margin-top:2px">✓</span>':''}
+          </div>
+        </div>
+        ${m.corpo?`<div style="font-size:12px;color:var(--ink3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(m.corpo)}</div>`:''}
+      </div>`).join('');
+}
+
+// Cache per detMail — lista normalizzata corrente
+function detMail(i) {
+  const q = document.getElementById('ml-q').value.toLowerCase();
+  const norms = mailLog.map(normMail).sort((a,b)=>b.data.localeCompare(a.data));
+  let lista = norms;
+  if (mlTab==='in')  lista = lista.filter(m=>m.tipo==='IN');
+  if (mlTab==='out') lista = lista.filter(m=>m.tipo==='OUT');
+  if (mlTab==='new') lista = lista.filter(m=>!m.cliente && m.rilevante);
+  if (q) lista = lista.filter(m=>[m.cliente,m.oggetto,m.da,m.a,m.corpo].join(' ').toLowerCase().includes(q));
+  const m = lista[i];
+  if (!m) return;
+  openMo(`
+    <div class="mo-ttl">${esc(m.cliente||'Email')}<button class="mo-x" onclick="closeMo()">✕</button></div>
+    <span class="b ${m.tipo==='IN'?'bb':'brs'}" style="margin-bottom:14px;display:inline-flex">${m.tipo==='IN'?'↙ Ricevuta':'↗ Inviata'} · ${fd(m.data)}</span>
+    ${m.referente?`<div class="dr"><span class="dk">Referente</span><span class="dv">${esc(m.referente)}</span></div>`:''}
+    <div class="dr"><span class="dk">Da</span><span class="dv" style="font-size:11.5px">${esc(m.da)}</span></div>
+    <div class="dr"><span class="dk">A</span><span class="dv" style="font-size:11.5px">${esc(m.a)}</span></div>
+    <div class="dr"><span class="dk">Oggetto</span><span class="dv">${esc(m.oggetto)}</span></div>
+    ${m.corpo?`<div style="margin-top:12px;font-size:13px;line-height:1.65;color:var(--ink2);background:var(--bg);border-radius:10px;padding:11px">${esc(m.corpo)}</div>`:''}
+    ${m.note_ai?`<div style="margin-top:10px;padding:10px 12px;background:var(--ink);border-radius:10px"><div style="font-size:10px;color:var(--rust3);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">✦ Note AI</div><div style="font-size:12px;color:#e8e4dc;line-height:1.5">${esc(m.note_ai)}</div></div>`:''}
+    <div class="mo-acts"><button class="btn btn-s" onclick="closeMo()">Chiudi</button></div>`);
+}
+
+/* ══════════════════════════════════════════════════════════
+   REPORT
+══════════════════════════════════════════════════════════ */
+function renderReport() {
+  const mesi = [];
+  for (let i=5; i>=0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    mesi.push({l:d.toLocaleDateString('it-IT',{month:'short'}), n:visite.filter(v=>v.data&&v.data.startsWith(k)).length});
+  }
+  const maxV = Math.max(...mesi.map(m=>m.n), 1);
+  const perStato = STATI.map(s=>({s, n:clienti.filter(c=>c.stato===s).length})).filter(x=>x.n>0);
+  const topC = Object.entries(
+    visite.reduce((acc,v)=>{ acc[v.azienda]=(acc[v.azienda]||0)+1; return acc; },{})
+  ).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  document.getElementById('report-body').innerHTML = `
+    <div class="sg">
+      <div class="sc dk"><div class="sn">${clienti.length}</div><div class="sl">Clienti totali</div></div>
+      <div class="sc"><div class="sn">${visite.length}</div><div class="sl">Visite registrate</div></div>
+      <div class="sc"><div class="sn">${note.filter(n=>!n.fatto).length}</div><div class="sl">Attività pendenti</div></div>
+      <div class="sc dk"><div class="sn">${mailLog.length}</div><div class="sl">Email nel log</div></div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-family:var(--ft);font-weight:700;font-size:12px;margin-bottom:14px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px">Visite ultimi 6 mesi</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px">
+        ${mesi.map((m,i)=>`
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="font-size:10px;color:var(--ink3);font-weight:600">${m.n||''}</div>
+            <div style="width:100%;background:${i===5?'var(--rust)':'var(--bg2)'};border-radius:5px 5px 0 0;height:${Math.max(m.n/maxV*62,m.n?4:0)}px;transition:height .4s"></div>
+            <div style="font-size:10px;color:var(--ink3)">${m.l}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-family:var(--ft);font-weight:700;font-size:12px;margin-bottom:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px">Clienti per stato</div>
+      ${perStato.map(({s,n})=>`
+        <div style="margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${s}</span><span style="font-weight:600">${n}</span></div>
+          <div class="pgw"><div class="pgb" style="width:${Math.round(n/clienti.length*100)}%"></div></div>
+        </div>`).join('')}
+    </div>
+    ${topC.length>0?`
+    <div class="card">
+      <div style="font-family:var(--ft);font-weight:700;font-size:12px;margin-bottom:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px">Top clienti visitati</div>
+      ${topC.map(([az,n],i)=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:22px;height:22px;border-radius:7px;background:var(--ink2);color:var(--rust3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div>
+          <div style="flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(az)}</div>
+          <span class="b bb">${n} visite</span>
+        </div>`).join('')}
+    </div>`:''}`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   VOCALE — AI con 3 livelli di fallback
+══════════════════════════════════════════════════════════ */
+let vMode = 'mic';
+let vStato = 'idle';
+let vTxt = '';
+let vAI = null;
+let vRec_ = null;
+
+function setMode(m) {
+  vMode = m;
+  document.getElementById('vm-mic').className = 'vmbtn'+(m==='mic'?' on':'');
+  document.getElementById('vm-txt').className = 'vmbtn'+(m==='txt'?' on':'');
+  document.getElementById('vmic-area').style.display = m==='mic'?'':'none';
+  document.getElementById('vtxt-area').style.display = m==='txt'?'block':'none';
+  document.getElementById('vhint').style.display = m==='mic'&&vStato==='idle'?'block':'none';
+  if (m==='txt') setTimeout(()=>document.getElementById('vtxt')?.focus(),100);
+  if (vRec_) { vRec_.stop(); vRec_=null; }
+  if (vStato==='recording') setPill('idle','Pronto');
+}
+
+function setPill(s, txt) {
+  vStato = s;
+  const cl = {idle:'sp-idle',recording:'sp-rec',processing:'sp-proc',ok:'sp-ok',error:'sp-err'};
+  const pk = {idle:'',recording:'<span class="pulse"></span> ',processing:'<span class="pulse"></span> ',ok:'✓ ',error:'✗ '};
+  const el = document.getElementById('vpill');
+  el.className = 'spill '+(cl[s]||'sp-idle');
+  el.innerHTML = (pk[s]||'')+txt;
+  const mw = document.getElementById('vmic-wrap');
+  if (mw) mw.className = 'mic-wrap'+(s==='recording'?' vrec':'');
+  const wv = document.getElementById('vwave');
+  if (wv) { wv.style.display = s==='recording'?'flex':'none'; wv.className='wave'+(s==='recording'?' vrec':''); }
+  const hint = document.getElementById('vhint');
+  if (hint) hint.style.display = s==='idle'&&vMode==='mic'?'block':'none';
+}
+
+function toggleMic() {
+  if (vStato==='idle'||vStato==='error'||vStato==='ok') avvia();
+  else if (vStato==='recording') fermaAnalizza();
+}
+
+async function avvia() {
+  document.getElementById('vtranscript').style.display='none';
+  document.getElementById('vaibox').style.display='none';
+  document.getElementById('vacts').style.display='none';
+  document.getElementById('vok').style.display='none';
+  vTxt=''; vAI=null;
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  if (!SR) { setPill('error','Usa Safari su iPhone'); return; }
+  try { await navigator.mediaDevices.getUserMedia({audio:true}); } catch { setPill('error','Permesso microfono negato'); return; }
+  const r = new SR();
+  r.lang='it-IT'; r.continuous=true; r.interimResults=true;
+  let ft='';
+  r.onresult = e => {
+    let it='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)ft+=t+' ';else it=t;}
+    vTxt=(ft+it).trim();
+    const tb=document.getElementById('vtranscript');
+    tb.style.display='block'; tb.textContent=vTxt;
+  };
+  r.onerror = e => { if(e.error!=='no-speech') setPill('error','Errore: '+e.error); };
+  vRec_=r; r.start();
+  document.getElementById('vbtn').innerHTML='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="white"/></svg>';
+  setPill('recording','In ascolto — premi stop');
+}
+
+async function fermaAnalizza() {
+  if (vRec_) { vRec_.stop(); vRec_=null; }
+  document.getElementById('vbtn').innerHTML='<div class="spin"></div>';
+  setPill('processing','Claude analizza…');
+  await new Promise(r=>setTimeout(r,350));
+  if (!vTxt||vTxt.length<4) { setPill('error','Nessuna voce — riprova'); resetMicBtn(); return; }
+  await analizzaAI(vTxt);
+}
+
+async function inviaTestoAI() {
+  vTxt = (document.getElementById('vtxt')?.value||'').trim();
+  if (!vTxt||vTxt.length<4) { alert('Scrivi qualcosa prima di analizzare'); return; }
+  document.getElementById('vtranscript').style.display='block';
+  document.getElementById('vtranscript').textContent=vTxt;
+  document.getElementById('vtxt-area').style.display='none';
+  document.getElementById('vaibox').style.display='none';
+  document.getElementById('vacts').style.display='none';
+  document.getElementById('vok').style.display='none';
+  setPill('processing','Claude analizza…');
+  await analizzaAI(vTxt);
+}
+
+async function analizzaAI(testo) {
+  const prompt = `Sei un assistente CRM per Daniele Settanni di Co.Me.Fi. Metalli Srl.
+Analizza la trascrizione e rispondi SOLO con JSON valido, senza backtick né testo aggiuntivo.
+
+Clienti: ${LISTA_NOMI}
+
+Schema:
+{
+  "cliente": "nome esatto dal CRM (abbina anche parziale, es 'principi'→'PRINCIPI') o null",
+  "tipo": "visita|telefonata|email|appunti",
+  "referente": "nome persona o null",
+  "data": "YYYY-MM-DD (oggi: ${oggi()})",
+  "note": "riassunto professionale in italiano",
+  "attivita": [{"testo":"...","scadenza":"YYYY-MM-DD o null","priorita":"Alta|Media|Bassa"}],
+  "nuovo_cliente": {"nome": "se NON in lista altrimenti null", "citta":"", "pr":""}
+}
+
+Trascrizione: "${testo}"`;
+
+  // Livello 1: window.claude nativo
+  if (typeof window !== 'undefined' && window.claude?.complete) {
+    try {
+      const r = await window.claude.complete(prompt);
+      const m = r.match(/\{[\s\S]*\}/);
+      if (m) { vAI=JSON.parse(m[0]); mostraAI(); return; }
+    } catch(e) { console.warn('claude.complete:', e.message); }
+  }
+  // Livello 2: API Anthropic
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await res.json();
+    const raw = data.content?.map(b=>b.text||'').join('').trim();
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (m) { vAI=JSON.parse(m[0]); mostraAI(); return; }
+  } catch(e) { console.warn('API:', e.message); }
+  // Livello 3: parsing locale
+  vAI = parsingLocale(testo);
+  mostraAI();
+}
+
+function parsingLocale(t) {
+  const tl = t.toLowerCase();
+  let cliente=null, maxS=0;
+  for (const c of clienti) {
+    const pp = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/);
+    let s=0; for(const p of pp) if(p.length>2&&tl.includes(p)) s+=p.length;
+    if(s>maxS){maxS=s;cliente=c.azienda;}
+  }
+  if(maxS<3) cliente=null;
+  const tipo = /telefon/.test(tl)?'telefonata':/mail|email/.test(tl)?'email':/appunt/.test(tl)?'appunti':'visita';
+  const att=[];
+  if(/richiamar|ricontatt/.test(tl)) att.push({testo:'Richiamare',scadenza:null,priorita:'Media'});
+  if(/mandar|inviar/.test(tl)) att.push({testo:'Mandare offerta',scadenza:null,priorita:'Media'});
+  if(/appuntament/.test(tl)) att.push({testo:'Fissare appuntamento',scadenza:null,priorita:'Alta'});
+  return {cliente,tipo,referente:null,data:oggi(),note:t.charAt(0).toUpperCase()+t.slice(1),attivita:att,nuovo_cliente:{nome:null}};
+}
+
+function mostraAI() {
+  const r = vAI;
+  const nome = r.cliente || r.nuovo_cliente?.nome;
+  setPill('ok', nome?'Cliente: '+nome:'Elaborato — verifica');
+  resetMicBtn();
+  const src = (typeof window!=='undefined'&&window.claude?.complete)?'✦ Claude AI':'⚡ Parsing locale';
+  document.getElementById('vaifields').innerHTML = [
+    ['Modalità', src, nome?'var(--rust3)':'var(--amber)'],
+    r.cliente?['Cliente',r.cliente,'var(--rust3)']:null,
+    r.nuovo_cliente?.nome?['Nuovo cliente','⚡ '+r.nuovo_cliente.nome+' (verrà creato)','var(--amber)']:null,
+    !r.cliente&&!r.nuovo_cliente?.nome?['⚠ Cliente','Non riconosciuto','var(--red)']:null,
+    r.tipo?['Tipo',r.tipo]:null,
+    r.referente?['Referente',r.referente]:null,
+    r.note?['Note',r.note]:null,
+    r.attivita?.length?['Attività',r.attivita.map(a=>a.priorita+': '+a.testo).join(' | ')]:null,
+  ].filter(Boolean).map(([k,v,c])=>`
+    <div class="aif">
+      <span class="aifk">${k}</span>
+      <span class="aifv"${c?` style="color:${c}"`:''}">${esc(v)}</span>
+    </div>`).join('');
+  document.getElementById('vaibox').style.display='block';
+  document.getElementById('vacts').style.display='flex';
+  document.getElementById('vsave').disabled=!nome;
+}
+
+function resetMicBtn() {
+  const btn=document.getElementById('vbtn');
+  if(btn) btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+}
+
+function vSalva() {
+  if (!vAI) return;
+  const r = vAI;
+  let nome = r.cliente;
+  // Crea nuovo cliente
+  if (!nome && r.nuovo_cliente?.nome) {
+    const nc={id:uid(),ag:'DAN',azienda:r.nuovo_cliente.nome.toUpperCase(),citta:r.nuovo_cliente.citta||'',pr:r.nuovo_cliente.pr||'',contatto:r.referente||'',numero:'',mail:'',piva:'',stato:'Prospect',ultima_visita:r.data||oggi()};
+    clienti=[...clienti,nc]; W('_clienti',clienti);
+    nome=nc.azienda;
+    const el=document.getElementById('vnuovo');
+    el.style.display='block'; el.textContent='✨ Nuovo cliente creato: '+nome;
+  }
+  // Salva visita
+  if (r.note && nome) {
+    const nv={id:uid(),azienda:nome,data:r.data||oggi(),tipo:r.tipo==='telefonata'?'Telefonata':r.tipo==='email'?'Email':'Visita',referente:r.referente||'',note:r.note};
+    visite=[nv,...visite]; W('_visite',visite);
+    clienti=clienti.map(c=>c.azienda===nome?{...c,ultima_visita:r.data||oggi()}:c); W('_clienti',clienti);
+  }
+  // Salva attività
+  if (r.attivita?.length) {
+    const na=r.attivita.map(a=>({id:uid(),azienda:nome||'',testo:a.testo,data:a.scadenza||'',priorita:a.priorita||'Media',fatto:false}));
+    note=[...na,...note]; W('_note',note);
+  }
+  document.getElementById('vaibox').style.display='none';
+  document.getElementById('vacts').style.display='none';
+  document.getElementById('vok').style.display='block';
+  badges();
+}
+
+function vReset() {
+  vTxt=''; vAI=null;
+  if(vRec_){vRec_.stop();vRec_=null;}
+  ['vtranscript','vaibox','vacts','vok','vnuovo'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+  const vt=document.getElementById('vtxt'); if(vt) vt.value='';
+  if(vMode==='txt') document.getElementById('vtxt-area').style.display='block';
+  resetMicBtn();
+  setPill('idle','Pronto');
+}
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
+renderClienti();
+badges();
+syncSheets();
+setInterval(syncSheets, 5*60*1000);
+</script>
+</body>
+</html>
