@@ -548,7 +548,10 @@ async function syncFromSheet(sheet) {
               const p = val.replace('Date(','').replace(')','').split(',').map(Number);
               const dt = new Date(p[0],p[1],p[2],p[3]||0,p[4]||0);
               o[col] = dt.toISOString().slice(0,10);
-              if (p[3] != null) o[col+'_ORA'] = String(p[3]).padStart(2,'0')+':'+String(p[4]||0).padStart(2,'0');
+              if (p[3] != null) {
+                o[col+'_ORA'] = String(p[3]).padStart(2,'0')+':'+String(p[4]||0).padStart(2,'0');
+                o[col+'_TS']  = dt.getTime(); // timestamp per ordinamento preciso
+              }
               return;
             } catch {}
           } else if (val instanceof Date) {
@@ -1304,7 +1307,8 @@ function normMail(m) {
                   (!clienteNome && mittenteEsterno);
   return {
     data:          g(['DATA','data'])||'',
-    ora:           g(['ORA','ora'])||'',
+    ora:           g(['DATA_ORA','ORA','ora'])||'',
+    ts:            parseInt(m['DATA_TS']||m['data_ts']||'0')||0,
     tipo:          g(['TIPO','tipo'])||parsed?.tipo||'IN',
     da:            da_val,
     a:             g(['A','a'])||'',
@@ -1331,7 +1335,13 @@ function setMailTab(t,btn) {
 }
 function renderMail() {
   const q=(document.getElementById('ml-q').value||'').toLowerCase();
-  const norms=mailLog.map(normMail).sort((a,b)=>{ const ka=(b.data||'')+(b.ora||''); const kb=(a.data||'')+(a.ora||''); return ka.localeCompare(kb); });
+  const norms=mailLog.map(normMail).sort((a,b)=>{
+    // Se abbiamo il timestamp preciso usalo, altrimenti usa data+ora stringa
+    if (a.ts && b.ts) return b.ts - a.ts;
+    const ka=(b.data||'').replace(/-/g,'')+(b.ora||'').replace(':','');
+    const kb=(a.data||'').replace(/-/g,'')+(a.ora||'').replace(':','');
+    return ka.localeCompare(kb);
+  });
 
   // INBOX DUBBI: mail con cliente non riconosciuto ma rilevante
   const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
@@ -1395,7 +1405,13 @@ function renderMail() {
       </div>`).join('');
 }
 function detMail(i,tab,q) {
-  const norms=mailLog.map(normMail).sort((a,b)=>{ const ka=(b.data||'')+(b.ora||''); const kb=(a.data||'')+(a.ora||''); return ka.localeCompare(kb); });
+  const norms=mailLog.map(normMail).sort((a,b)=>{
+    // Se abbiamo il timestamp preciso usalo, altrimenti usa data+ora stringa
+    if (a.ts && b.ts) return b.ts - a.ts;
+    const ka=(b.data||'').replace(/-/g,'')+(b.ora||'').replace(':','');
+    const kb=(a.data||'').replace(/-/g,'')+(a.ora||'').replace(':','');
+    return ka.localeCompare(kb);
+  });
   let lista=norms;
   if(tab==='in') lista=lista.filter(m=>m.tipo==='IN');
   if(tab==='out') lista=lista.filter(m=>m.tipo==='OUT');
@@ -1734,7 +1750,7 @@ function saveMailManuale(cid) {
 ═══════════════════════════════════════════════════ */
 
 function approvaClienteInbox(idx, nomeGuess, dom) {
-  const norms = mailLog.map(normMail).sort((a,b)=>{ const ka=(b.data||'')+(b.ora||''); const kb=(a.data||'')+(a.ora||''); return ka.localeCompare(kb); });
+  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const ka=(b.data||'').replace(/-/g,'')+(b.ora||'').replace(':',''); const kb=(a.data||'').replace(/-/g,'')+(a.ora||'').replace(':',''); return ka.localeCompare(kb); });
   const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
   const m = inbox[idx]; if(!m) return;
 
@@ -1774,7 +1790,7 @@ function approvaClienteInbox(idx, nomeGuess, dom) {
 function confermaCreaCliente(idx) {
   const az = (document.getElementById('ni-az')?.value||'').trim().toUpperCase();
   if (!az) return;
-  const norms = mailLog.map(normMail).sort((a,b)=>{ const ka=(b.data||'')+(b.ora||''); const kb=(a.data||'')+(a.ora||''); return ka.localeCompare(kb); });
+  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const ka=(b.data||'').replace(/-/g,'')+(b.ora||'').replace(':',''); const kb=(a.data||'').replace(/-/g,'')+(a.ora||'').replace(':',''); return ka.localeCompare(kb); });
   const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
   const m = inbox[idx];
 
@@ -1826,7 +1842,7 @@ function confermaCreaCliente(idx) {
 
 function ignoraInbox(idx) {
   // Marca la mail come non rilevante nel mailLog locale
-  const norms = mailLog.map(normMail).sort((a,b)=>{ const ka=(b.data||'')+(b.ora||''); const kb=(a.data||'')+(a.ora||''); return ka.localeCompare(kb); });
+  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const ka=(b.data||'').replace(/-/g,'')+(b.ora||'').replace(':',''); const kb=(a.data||'').replace(/-/g,'')+(a.ora||'').replace(':',''); return ka.localeCompare(kb); });
   const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
   const m = inbox[idx]; if(!m) return;
   mailLog = mailLog.map(raw => {
