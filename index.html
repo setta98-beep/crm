@@ -535,7 +535,8 @@ function consMini(cons) {
 ═══════════════════════════════════════════════════ */
 async function syncSheets() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1`;
+    // Usa range esplicito per leggere tutte le righe ignorando colonne vuote
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:Q`;
     const res = await fetch(url);
     const txt = await res.text();
     const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
@@ -544,7 +545,7 @@ async function syncSheets() {
     if (!data.table?.rows?.length) return;
     const cols = data.table.cols.map(c => c.label || c.id || '');
     mailLog = data.table.rows
-      .filter(row => row.c && row.c.some(cell => cell && cell.v != null))
+      .filter(row => row.c && row.c.some(cell => cell && cell.v != null && String(cell.v).trim() !== ''))
       .map(row => {
         const o = {};
         cols.forEach((col, i) => {
@@ -555,7 +556,7 @@ async function syncSheets() {
           } else if (val instanceof Date) { val = val.toISOString().slice(0,10); }
           o[col] = val == null ? '' : String(val);
         });
-        // Matching dominio CASE INSENSITIVE
+        // Matching dominio CASE INSENSITIVE su clienti con dominio configurato
         const da = (o.DA||'').toLowerCase();
         const domMatch = da.match(/@([a-z0-9._-]+)/);
         if (domMatch && !o.CLIENTE_RICONOSCIUTO) {
