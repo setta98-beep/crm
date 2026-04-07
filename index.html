@@ -450,6 +450,8 @@ const LISTA_NOMI = 'AA MODELLERIA SRL, ACMI SPA, ACT EUROPE SRL, ADI SPORT, ADM 
 ═══════════════════════════════════════════════════ */
 const S = k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch { return null; } };
 const W = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} };
+const LS = S;
+const LW = W;
 
 const VER = 'jarvis-2.0';
 if (S('_ver') !== VER) {
@@ -461,6 +463,10 @@ let clienti = S('_clienti') || JSON.parse(JSON.stringify(DD_C));
 let visite  = S('_visite')  || JSON.parse(JSON.stringify(DD_V));
 let note    = S('_note')    || JSON.parse(JSON.stringify(DD_N));
 let mailLog = S('_mail')    || [];
+let opQueue = S('_queue')  || [];
+let clStato = 'Tutti', clView = 'list';
+let attTab  = 'todo';
+let mlTab   = 'all';
 
 if (clienti.length < 300) { clienti = JSON.parse(JSON.stringify(DD_C)); W('_clienti', clienti); }
 
@@ -486,8 +492,6 @@ const CONS_IC = {barre:'▬',piastre:'⬛',profili:'◈',lamiere:'▤'};
 /* ═══════════════════════════════════════════════════
    WEBHOOK → SHEETS (con coda offline)
 ═══════════════════════════════════════════════════ */
-let opQueue = LS('_queue') || [];
-
 async function pushSheet(url, data) {
   try {
     const r = await fetch(url, {
@@ -562,8 +566,10 @@ async function syncFromSheet(sheet) {
 }
 
 async function syncClienti() {
+  // Mostra subito i dati locali mentre carica
+  renderClienti();
   const rows = await syncFromSheet('CLIENTI');
-  if (!rows) { renderClienti(); return; }
+  if (!rows) return; // mantieni dati locali
   clienti = rows.map(r => ({
     id: r.ID||uid(), ag: r.AG||'', azienda: r.AZIENDA||'',
     citta: r.CITTA||'', pr: r.PR||'', indirizzo: r.INDIRIZZO||'', cap: r.CAP||'',
@@ -581,8 +587,9 @@ async function syncClienti() {
 }
 
 async function syncVisite() {
+  renderVisite();
   const rows = await syncFromSheet('VISITE');
-  if (!rows) { renderVisite(); return; }
+  if (!rows) return;
   visite = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', data: r.DATA||'',
     tipo: r.TIPO||'Visita', referente: r.REFERENTE||'', note: r.NOTE||''
@@ -592,8 +599,9 @@ async function syncVisite() {
 }
 
 async function syncTask() {
+  renderAtt();
   const rows = await syncFromSheet('TASK');
-  if (!rows) { renderAtt(); return; }
+  if (!rows) return;
   note = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', testo: r.TESTO||'',
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
@@ -724,8 +732,6 @@ async function syncSheets() {
 /* ═══════════════════════════════════════════════════
    CLIENTI
 ═══════════════════════════════════════════════════ */
-let clStato = 'Tutti';
-let clView  = 'list';
 
 function setClView(v, btn) {
   clView = v;
@@ -1208,7 +1214,7 @@ function delVisita(id) { visite=visite.filter(v=>v.id!==id); W('_visite',visite)
 /* ═══════════════════════════════════════════════════
    ATTIVITÀ
 ═══════════════════════════════════════════════════ */
-let attTab='todo';
+
 function setAttTab(t,btn) {
   attTab=t;
   document.querySelectorAll('#att-tabs .tab').forEach(b=>b.classList.remove('on'));
@@ -1275,7 +1281,7 @@ function delAtt(id) { note=note.filter(n=>n.id!==id); W('_note',note); closeMo()
 /* ═══════════════════════════════════════════════════
    MAIL
 ═══════════════════════════════════════════════════ */
-let mlTab='all';
+
 function normMail(m) {
   const g=keys=>{for(const k of keys){if(m[k]!==undefined&&m[k]!==''&&m[k]!=='nan')return String(m[k]);}return '';};
   const raw=g(['CLIENTE_RICONOSCIUTO','cliente_riconosciuto']);
@@ -1835,8 +1841,11 @@ function ignoraInbox(idx) {
   renderMail();
 }
 
-syncClienti();
+// Mostra subito i dati locali (fallback)
+renderClienti();
 badges();
+// Poi sincronizza da Sheets in background
+syncClienti();
 syncSheets();
 setInterval(syncSheets, 3*60*1000);
 setInterval(flushQueue, 30*1000);
