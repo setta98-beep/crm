@@ -1065,19 +1065,24 @@ function editAnagrafica(id) {
 }
 
 async function saveAnagrafica(id) {
-  clienti = clienti.map(c => c.id===id ? {...c,
-    indirizzo: document.getElementById('ea-ind')?.value.trim()||c.indirizzo,
-    cap:       document.getElementById('ea-cap')?.value.trim()||c.cap,
-    citta:     document.getElementById('ea-ci')?.value.trim()||c.citta,
-    pr:        document.getElementById('ea-pr')?.value.trim().toUpperCase()||c.pr,
-    dominio:   document.getElementById('ea-dom')?.value.trim().toLowerCase()||c.dominio,
-    piva:      document.getElementById('ea-pi')?.value.trim()||c.piva,
-    stato:     document.getElementById('ea-st')?.value||c.stato,
-  } : c);
+  // Leggi tutti i valori PRIMA di qualsiasi render
+  const vals = {
+    indirizzo: document.getElementById('ea-ind')?.value.trim() ?? '',
+    cap:       document.getElementById('ea-cap')?.value.trim() ?? '',
+    citta:     document.getElementById('ea-ci')?.value.trim() ?? '',
+    pr:        (document.getElementById('ea-pr')?.value.trim() ?? '').toUpperCase(),
+    dominio:   (document.getElementById('ea-dom')?.value.trim() ?? '').toLowerCase(),
+    piva:      document.getElementById('ea-pi')?.value.trim() ?? '',
+    stato:     document.getElementById('ea-st')?.value ?? '',
+  };
+  clienti = clienti.map(c => c.id===id ? {...c, ...vals} : c);
   W('_clienti', clienti);
   const c = clienti.find(x=>x.id===id);
-  await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
-  renderScheda(id);
+  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  // Feedback visivo
+  const btn = document.querySelector(`button[onclick="saveAnagrafica('${id}')"]`);
+  if(btn) { btn.textContent = ok ? '✓ SALVATO' : '✓ SALVATO (offline)'; btn.style.background='var(--green)'; }
+  setTimeout(() => renderScheda(id), 800);
 }
 
 function editReferenti(id) {
@@ -2129,6 +2134,35 @@ async function saveAttEdit(id) {
   const upd = note.find(x=>x.id===id);
   await pushSheet(WH_TASK, {id:upd.id,azienda:upd.azienda,testo:upd.testo,data:upd.data,priorita:upd.priorita,fatto:upd.fatto});
   closeMo(); renderAtt();
+}
+
+async function analizzaConsumi(id) {
+  const c = clienti.find(x=>x.id===id); if(!c) return;
+  const mv = visite.filter(v=>v.azienda===c.azienda);
+  const mm = mailLog.map(normMail).filter(m=>m.cliente===c.azienda);
+  const testi = [...mv.map(v=>v.note),...mm.map(m=>m.corpo+' '+m.oggetto)].filter(Boolean).join(' ').slice(0,2000);
+  if(!testi.trim()) return;
+  const box = document.getElementById('consumi-'+id);
+  if(box) box.innerHTML='<div style="color:var(--ink3);font-size:11px;font-family:var(--fm);padding:8px 0"><span class="pulse" style="display:inline-block;margin-right:6px"></span>ANALISI IN CORSO...</div>';
+  const prompt = `Analizza note cliente alluminio. Rispondi SOLO JSON senza backtick. Schema: {"barre":"","piastre":"","profili":"","lamiere":"","note_generali":""}. Note: ${testi}`;
+  try {
+    let raw = '';
+    if(window.claude?.complete) raw = await window.claude.complete(prompt);
+    else {
+      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:350,messages:[{role:'user',content:prompt}]})});
+      raw = (await r.json()).content?.[0]?.text||'';
+    }
+    const m = raw.match(/\{[\s\S]*\}/);
+    if(!m) return;
+    const cons = JSON.parse(m[0]);
+    clienti = clienti.map(x=>x.id===id?{...x,consumi:cons}:x);
+    W('_clienti',clienti);
+    await pushSheet(WH_CLIENTE, {...clienti.find(x=>x.id===id), _azione:'update'});
+    if(box) box.innerHTML = renderConsumi(cons);
+  } catch(e) {
+    console.warn('analizzaConsumi:', e);
+    if(box) box.innerHTML = renderConsumi(c.consumi||{});
+  }
 }
 </script>
 </body>
