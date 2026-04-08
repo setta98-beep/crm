@@ -1672,15 +1672,92 @@ async function analizzaAI(testo) {
   vAI=parsingLocale(testo); mostraAI();
 }
 function parsingLocale(t) {
-  const tl=t.toLowerCase();let cliente=null,maxS=0;
-  for(const c of clienti){const pp=c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/);let s=0;for(const p of pp)if(p.length>2&&tl.includes(p))s+=p.length;if(s>maxS){maxS=s;cliente=c.azienda;}}
-  if(maxS<3) cliente=null;
-  const tipo=/telefon/.test(tl)?'telefonata':/mail|email/.test(tl)?'email':/appunt/.test(tl)?'appunti':'visita';
-  const att=[];
-  if(/richiamar|ricontatt/.test(tl)) att.push({testo:'Richiamare',scadenza:null,priorita:'Media'});
-  if(/mandar|inviar|offerta/.test(tl)) att.push({testo:'Inviare offerta',scadenza:null,priorita:'Alta'});
-  if(/appuntament/.test(tl)) att.push({testo:'Fissare appuntamento',scadenza:null,priorita:'Alta'});
-  return {cliente,tipo,referente:null,data:oggi(),note:t.charAt(0).toUpperCase()+t.slice(1),attivita:att,nuovo_cliente:{nome:null}};
+  const tl = t.toLowerCase();
+
+  // ── Trova cliente ──────────────────────────────────────────────────────
+  let cliente = null, maxS = 0;
+  for (const c of clienti) {
+    const pp = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/);
+    let s = 0;
+    for (const p of pp) if (p.length>2 && tl.includes(p)) s += p.length;
+    if (s > maxS) { maxS = s; cliente = c.azienda; }
+  }
+  if (maxS < 3) cliente = null;
+
+  // ── Tipo interazione ───────────────────────────────────────────────────
+  const tipo = /telefon/.test(tl) ? 'telefonata'
+             : /\bmail\b|email/.test(tl) ? 'email'
+             : /appunt/.test(tl) ? 'appunti' : 'visita';
+
+  // ── Calcola data da espressione relativa ───────────────────────────────
+  function dataRelativa(expr) {
+    const d = new Date();
+    // "tra X giorni/settimane/mesi"
+    const mGiorni = expr.match(/tra\s+(\d+)\s*giorn/);
+    const mSett   = expr.match(/tra\s+(\d+)\s*settiman/);
+    const mMesi   = expr.match(/tra\s+(un|una|1|due|2|tre|3|quattro|4|cinque|5|sei|6)\s*mes/);
+    const mFine   = expr.match(/fine\s*(mese|settimana|anno)/);
+    const mPross  = expr.match(/prossim[ao]\s*(luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|settiman|mes)/);
+    // mesi in italiano
+    const mesiNomi = {gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
+    const mesiMap  = {un:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6};
+
+    if (mGiorni) { d.setDate(d.getDate() + parseInt(mGiorni[1])); return d.toISOString().slice(0,10); }
+    if (mSett)   { d.setDate(d.getDate() + parseInt(mSett[1])*7); return d.toISOString().slice(0,10); }
+    if (mMesi)   { const nm = mesiMap[mMesi[1]] || parseInt(mMesi[1]); d.setMonth(d.getMonth()+nm); return d.toISOString().slice(0,10); }
+    if (mFine) {
+      if (mFine[1]==='mese') { d.setMonth(d.getMonth()+1,0); return d.toISOString().slice(0,10); }
+      if (mFine[1]==='settimana') { d.setDate(d.getDate()+(5-d.getDay())); return d.toISOString().slice(0,10); }
+    }
+    // "a maggio", "a giugno", ecc.
+    for (const [nome, idx] of Object.entries(mesiNomi)) {
+      if (expr.includes(nome)) {
+        const anno = d.getMonth() > idx ? d.getFullYear()+1 : d.getFullYear();
+        return `${anno}-${String(idx+1).padStart(2,'0')}-01`;
+      }
+    }
+    return null;
+  }
+
+  // ── Crea attività ──────────────────────────────────────────────────────
+  const att = [];
+  const scad = dataRelativa(tl);
+
+  // Richiamare / ricontattare
+  if (/richiamar|ricontatt/.test(tl)) {
+    att.push({testo:'Richiamare ' + (cliente||''), scadenza: scad, priorita:'Media'});
+  }
+  // Mandare offerta
+  if (/mandar|inviar.*offerta|offerta.*inviar/.test(tl)) {
+    att.push({testo:'Inviare offerta a ' + (cliente||''), scadenza: scad, priorita:'Alta'});
+  }
+  // Appuntamento / passare a trovare
+  if (/appuntament|passare a trovare|prendere appuntament|fissare/.test(tl)) {
+    att.push({testo:'Appuntamento con ' + (cliente||''), scadenza: scad, priorita:'Alta'});
+  }
+  // Mandare campioni / materiale
+  if (/mandar.*campio|mandar.*mater|spedire/.test(tl)) {
+    att.push({testo:'Inviare campioni/materiale a ' + (cliente||''), scadenza: scad, priorita:'Media'});
+  }
+  // Fare preventivo
+  if (/preventivo|quotazion/.test(tl)) {
+    att.push({testo:'Fare preventivo per ' + (cliente||''), scadenza: scad, priorita:'Alta'});
+  }
+
+  // Se ha detto una scadenza ma nessun task specifico, crea task generico
+  if (scad && att.length === 0) {
+    att.push({testo:'Follow-up ' + (cliente||''), scadenza: scad, priorita:'Media'});
+  }
+
+  return {
+    cliente,
+    tipo,
+    referente: null,
+    data: oggi(),
+    note: t.charAt(0).toUpperCase() + t.slice(1),
+    attivita: att,
+    nuovo_cliente: {nome: null}
+  };
 }
 function mostraAI() {
   const r=vAI;
@@ -1709,7 +1786,17 @@ async function vSalva() {
   if(!vAI) return;
   const r=vAI; let nome=r.cliente;
   if(!nome&&r.nuovo_cliente?.nome){const nc={id:uid(),ag:'DAN',azienda:r.nuovo_cliente.nome.toUpperCase(),citta:r.nuovo_cliente.citta||'',pr:r.nuovo_cliente.pr||'',contatto:r.referente||'',numero:'',mail:'',dominio:'',piva:'',stato:'Prospect',ultima_visita:r.data||oggi(),descrizione:'',consumi:{barre:'',piastre:'',profili:'',lamiere:'',note_generali:''}};clienti=[...clienti,nc];W('_clienti',clienti);nome=nc.azienda;const el=document.getElementById('vnuovo');el.style.display='block';el.textContent='⚡ NUOVO CLIENTE: '+nome;}
-  if(r.note&&nome){const nv={id:uid(),azienda:nome,data:r.data||oggi(),tipo:r.tipo==='telefonata'?'Telefonata':r.tipo==='email'?'Email':'Visita',referente:r.referente||'',note:r.note};visite=[nv,...visite];W('_visite',visite);clienti=clienti.map(c=>c.azienda===nome?{...c,ultima_visita:r.data||oggi()}:c);W('_clienti',clienti);await pushSheet(WH_VISITA,nv);}
+  if(r.note&&nome){
+    const nv={id:uid(),azienda:nome,data:r.data||oggi(),tipo:r.tipo==='telefonata'?'Telefonata':r.tipo==='email'?'Email':'Visita',referente:r.referente||'',note:r.note};
+    visite=[nv,...visite];
+    W('_visite',visite);
+    clienti=clienti.map(c=>c.azienda===nome?{...c,ultima_visita:r.data||oggi()}:c);
+    W('_clienti',clienti);
+    await pushSheet(WH_VISITA,nv);
+    // Aggiorna contatore visite se tab aperta
+    const vcnt=document.getElementById('vi-cnt');
+    if(vcnt) vcnt.textContent=visite.length+' // REGISTRAZIONI';
+  }
   if(r.attivita?.length){const na=r.attivita.map(a=>({id:uid(),azienda:nome||'',testo:a.testo,data:a.scadenza||'',priorita:a.priorita||'Media',fatto:false}));note=[...na,...note];W('_note',note);for(const n of na) await pushSheet(WH_TASK,n);}
   document.getElementById('vaibox').style.display='none';
   document.getElementById('vacts').style.display='none';
