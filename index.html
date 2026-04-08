@@ -2147,10 +2147,8 @@ async function analizzaConsumi(id) {
   try {
     let raw = '';
     if(window.claude?.complete) raw = await window.claude.complete(prompt);
-    else {
-      const r = await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:350,messages:[{role:'user',content:prompt}]})});
-      raw = (await r.json()).content?.[0]?.text||'';
-    }
+    // Nota: chiamata API diretta rimossa (CORS bloccato dal browser)
+    if (!raw) { if(box) box.innerHTML = renderConsumi(c.consumi||{}); return; }
     const m = raw.match(/\{[\s\S]*\}/);
     if(!m) return;
     const cons = JSON.parse(m[0]);
