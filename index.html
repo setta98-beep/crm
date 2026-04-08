@@ -1311,31 +1311,41 @@ function setAttTab(t,btn) {
   btn.classList.add('on'); renderAtt();
 }
 function renderAtt() {
-  const sorted=[...note].sort((a,b)=>{if(a.fatto!==b.fatto)return a.fatto?1:-1;const o={Alta:0,Media:1,Bassa:2};return(o[a.priorita]||1)-(o[b.priorita]||1);});
-  const lista=attTab==='todo'?sorted.filter(n=>!n.fatto):sorted.filter(n=>n.fatto);
-  const scad=note.filter(n=>!n.fatto&&n.data&&n.data<oggi()).length;
-  document.getElementById('att-ttl').innerHTML='Task'+(scad>0?` <span class="b br" style="font-size:9px">${scad} SCAD.</span>`:'');
-  document.getElementById('att-cnt').textContent=note.filter(n=>!n.fatto).length+' // DA FARE';
-  document.getElementById('att-list').innerHTML=lista.length===0
-    ?`<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">${attTab==='todo'?'// ALL CLEAR ✓':'// NESSUNA COMPLETATA'}</div>`
-    :lista.map(n=>{const sc=!n.fatto&&n.data&&n.data<oggi();
-      return `<div class="card" style="border-left:2px solid ${sc?'var(--red)':n.priorita==='Alta'?'var(--amber)':'rgba(0,212,255,.2)'}">
-        <div class="row">
-          <button onclick="toggleAtt('${n.id}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid ${n.fatto?'var(--green)':'rgba(0,212,255,.3)'};background:${n.fatto?'rgba(0,230,118,.15)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .18s">
-            ${n.fatto?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':''}
-          </button>
-          <div class="ri" style="cursor:pointer" onclick="detAtt('${n.id}')">
-            <div class="rn" style="text-decoration:${n.fatto?'line-through':'none'};color:${n.fatto?'var(--ink3)':'var(--ink)'};font-size:13px">${esc(n.testo)}</div>
-            <div class="rs">${n.azienda?esc(n.azienda)+' · ':''}<span style="font-family:var(--fm)">${fs(n.data)}</span>${sc?' <span style="color:var(--red)">⚠</span>':''}</div>
-          </div>
-          <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-            <button onclick="event.stopPropagation();editAtt('${n.id}')" style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:7px;padding:5px 10px;font-size:10px;font-family:var(--fm);color:var(--cyan);cursor:pointer">EDIT</button>
-            <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-            <button onclick="event.stopPropagation();editAtt('${n.id}')" style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:7px;padding:5px 10px;font-size:10px;font-family:var(--fm);color:var(--cyan);cursor:pointer">EDIT</button>
-            <span class="b ${PRC[n.priorita]||'bgr'}" style="font-size:9px">${n.priorita}</span>
-          </div>
-        </div>
-      </div>`;}).join('');
+  const sorted = [...note].sort((a,b) => {
+    if (a.fatto !== b.fatto) return a.fatto ? 1 : -1;
+    const o = {Alta:0, Media:1, Bassa:2};
+    return (o[a.priorita]||1) - (o[b.priorita]||1);
+  });
+  const lista = attTab==='todo' ? sorted.filter(n=>!n.fatto) : sorted.filter(n=>n.fatto);
+  const scad = note.filter(n=>!n.fatto&&n.data&&n.data<oggi()).length;
+  document.getElementById('att-ttl').innerHTML = 'Task' + (scad>0 ? ` <span class="b br" style="font-size:9px">${scad} SCAD.</span>` : '');
+  document.getElementById('att-cnt').textContent = note.filter(n=>!n.fatto).length + ' // DA FARE';
+
+  if (lista.length === 0) {
+    document.getElementById('att-list').innerHTML = `<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">${attTab==='todo'?'// ALL CLEAR ✓':'// NESSUNA COMPLETATA'}</div>`;
+    badges(); return;
+  }
+
+  document.getElementById('att-list').innerHTML = lista.map(n => {
+    const sc = !n.fatto && n.data && n.data < oggi();
+    const borderColor = sc ? 'var(--red)' : n.priorita==='Alta' ? 'var(--amber)' : 'rgba(0,212,255,.2)';
+    const checkIcon = n.fatto ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+    const checkBg = n.fatto ? 'rgba(0,230,118,.15)' : 'transparent';
+    const checkBorder = n.fatto ? 'var(--green)' : 'rgba(0,212,255,.3)';
+    return `<div class="card" style="border-left:2px solid ${borderColor};margin-bottom:10px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button onclick="toggleAtt('${n.id}')" style="width:24px;height:24px;border-radius:6px;border:1.5px solid ${checkBorder};background:${checkBg};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">${checkIcon}</button>
+    <div style="flex:1;min-width:0;cursor:pointer" onclick="detAtt('${n.id}')">
+      <div style="font-size:13px;font-weight:600;text-decoration:${n.fatto?'line-through':'none'};color:${n.fatto?'var(--ink3)':'var(--ink)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.testo)}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px;font-family:var(--fm)">${n.azienda?esc(n.azienda)+' · ':''}${fs(n.data)}${sc?' <span style="color:var(--red)">⚠</span>':''}</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+      <button onclick="event.stopPropagation();editAtt('${n.id}')" style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:7px;padding:5px 10px;font-size:10px;font-family:var(--fm);color:var(--cyan);cursor:pointer">EDIT</button>
+      <span class="b ${PRC[n.priorita]||'bgr'}" style="font-size:9px">${n.priorita}</span>
+    </div>
+  </div>
+</div>`;
+  }).join('');
   badges();
 }
 
