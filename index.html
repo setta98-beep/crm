@@ -468,7 +468,7 @@ let clStato = 'Tutti', clView = 'list';
 let attTab  = 'todo';
 let mlTab   = 'all';
 
-if (clienti.length < 300) { clienti = JSON.parse(JSON.stringify(DD_C)); W('_clienti', clienti); }
+// DD_C usato solo come fallback iniziale se localStorage è vuoto (già gestito sopra)
 
 /* ═══════════════════════════════════════════════════
    UTILS
