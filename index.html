@@ -493,6 +493,7 @@ const CONS_IC = {barre:'▬',piastre:'⬛',profili:'◈',lamiere:'▤'};
    WEBHOOK → SHEETS (con coda offline)
 ═══════════════════════════════════════════════════ */
 async function pushSheet(url, data) {
+  console.log('pushSheet:', url, JSON.stringify(data).slice(0,100));
   try {
     const r = await fetch(url, {
       method: 'POST',
@@ -504,7 +505,7 @@ async function pushSheet(url, data) {
   } catch(e) {
     opQueue.push({url, data, ts: Date.now()});
     LW('_queue', opQueue);
-    console.warn('Offline — in coda:', e.message);
+    console.warn('Offline — in coda:', e.message, url);
     return false;
   }
 }
@@ -576,7 +577,8 @@ async function syncClienti() {
   renderClienti();
   const rows = await syncFromSheet('CLIENTI');
   if (!rows) return; // mantieni dati locali
-  clienti = rows.map(r => ({
+
+  const sheetClienti = rows.map(r => ({
     id: r.ID||uid(), ag: r.AG||'', azienda: r.AZIENDA||'',
     citta: r.CITTA||'', pr: r.PR||'', indirizzo: r.INDIRIZZO||'', cap: r.CAP||'',
     contatto: r.CONTATTO||'', numero: r.NUMERO||'', mail: r.MAIL||'',
@@ -588,9 +590,39 @@ async function syncClienti() {
       note_generali: r.NOTE_CONSUMI||''
     }
   })).filter(c => c.azienda);
+
+  // MERGE: preferisci il valore locale se non vuoto, altrimenti usa Sheets
+  const mg = (local, sheet) => (local && local !== '') ? local : sheet;
+
+  clienti = sheetClienti.map(sc => {
+    const loc = clienti.find(c => c.azienda === sc.azienda || c.id === sc.id);
+    if (!loc) return sc;
+    return {
+      ...sc,
+      dominio:      mg(loc.dominio,      sc.dominio),
+      piva:         mg(loc.piva,         sc.piva),
+      indirizzo:    mg(loc.indirizzo,    sc.indirizzo),
+      cap:          mg(loc.cap,          sc.cap),
+      contatto:     mg(loc.contatto,     sc.contatto),
+      numero:       mg(loc.numero,       sc.numero),
+      mail:         mg(loc.mail,         sc.mail),
+      descrizione:  mg(loc.descrizione,  sc.descrizione),
+      stato:        mg(loc.stato,        sc.stato),
+      ultima_visita: (loc.ultima_visita||'') > (sc.ultima_visita||'') ? loc.ultima_visita : sc.ultima_visita,
+      consumi: {
+        barre:         mg(loc.consumi?.barre,         sc.consumi?.barre),
+        piastre:       mg(loc.consumi?.piastre,       sc.consumi?.piastre),
+        profili:       mg(loc.consumi?.profili,       sc.consumi?.profili),
+        lamiere:       mg(loc.consumi?.lamiere,       sc.consumi?.lamiere),
+        note_generali: mg(loc.consumi?.note_generali, sc.consumi?.note_generali),
+      }
+    };
+  });
+
   LW('_clienti', clienti);
   renderClienti();
 }
+
 
 async function syncVisite() {
   renderVisite();
@@ -1064,6 +1096,7 @@ function editAnagrafica(id) {
 }
 
 async function saveAnagrafica(id) {
+  console.log('saveAnagrafica chiamata, id:', id);
   // Leggi tutti i valori PRIMA di qualsiasi render
   const vals = {
     indirizzo: document.getElementById('ea-ind')?.value.trim() ?? '',
