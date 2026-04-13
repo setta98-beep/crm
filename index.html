@@ -915,7 +915,7 @@ async function saveCliente(id) {
   clienti = id ? clienti.map(x=>x.id===id?{...x,...c}:x) : [...clienti,c];
   W('_clienti',clienti);
   const _c=clienti.find(x=>x.id===c.id);
-  if(_c) await pushSheet(WH_CLIENTE, {..._c, _azione: id?'update':'insert'});
+  if(_c) await pushSheet(id ? WH_CLIENTE : WH_NUOVO_CLIENTE, {..._c, _azione: id?'update':'insert'});
   closeMo(); renderClienti();
 }
 
