@@ -1096,25 +1096,30 @@ function editAnagrafica(id) {
 }
 
 async function saveAnagrafica(id) {
-  console.log('saveAnagrafica chiamata, id:', id);
-  // Leggi tutti i valori PRIMA di qualsiasi render
-  const vals = {
-    indirizzo: document.getElementById('ea-ind')?.value.trim() ?? '',
-    cap:       document.getElementById('ea-cap')?.value.trim() ?? '',
-    citta:     document.getElementById('ea-ci')?.value.trim() ?? '',
-    pr:        (document.getElementById('ea-pr')?.value.trim() ?? '').toUpperCase(),
-    dominio:   (document.getElementById('ea-dom')?.value.trim() ?? '').toLowerCase(),
-    piva:      document.getElementById('ea-pi')?.value.trim() ?? '',
-    stato:     document.getElementById('ea-st')?.value ?? '',
-  };
-  clienti = clienti.map(c => c.id===id ? {...c, ...vals} : c);
+  // Leggi tutti i valori DAL DOM subito
+  const ind = document.getElementById('ea-ind')?.value.trim() ?? '';
+  const cap = document.getElementById('ea-cap')?.value.trim() ?? '';
+  const ci  = document.getElementById('ea-ci')?.value.trim() ?? '';
+  const pr  = (document.getElementById('ea-pr')?.value.trim() ?? '').toUpperCase();
+  const dom = (document.getElementById('ea-dom')?.value.trim() ?? '').toLowerCase();
+  const pi  = document.getElementById('ea-pi')?.value.trim() ?? '';
+  const st  = document.getElementById('ea-st')?.value ?? '';
+
+  console.log('saveAnagrafica - dominio letto:', dom);
+
+  // Aggiorna locale
+  clienti = clienti.map(c => c.id===id ? {...c,
+    indirizzo: ind, cap, citta: ci, pr, dominio: dom, piva: pi, stato: st
+  } : c);
   W('_clienti', clienti);
+
+  // Invia a Sheets
   const c = clienti.find(x=>x.id===id);
-  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
-  // Feedback visivo
-  const btn = document.querySelector(`button[onclick="saveAnagrafica('${id}')"]`);
-  if(btn) { btn.textContent = ok ? '✓ SALVATO' : '✓ SALVATO (offline)'; btn.style.background='var(--green)'; }
-  setTimeout(() => renderScheda(id), 800);
+  console.log('pushSheet dominio:', c?.dominio);
+  pushSheet(WH_CLIENTE, {...c, _azione:'update'}); // non await — non bloccare il render
+
+  // Renderizza subito con i nuovi dati
+  renderScheda(id);
 }
 
 function editReferenti(id) {
