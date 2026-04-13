@@ -1096,30 +1096,38 @@ function editAnagrafica(id) {
 }
 
 async function saveAnagrafica(id) {
-  // Leggi tutti i valori DAL DOM subito
-  const ind = document.getElementById('ea-ind')?.value.trim() ?? '';
-  const cap = document.getElementById('ea-cap')?.value.trim() ?? '';
-  const ci  = document.getElementById('ea-ci')?.value.trim() ?? '';
-  const pr  = (document.getElementById('ea-pr')?.value.trim() ?? '').toUpperCase();
-  const dom = (document.getElementById('ea-dom')?.value.trim() ?? '').toLowerCase();
-  const pi  = document.getElementById('ea-pi')?.value.trim() ?? '';
-  const st  = document.getElementById('ea-st')?.value ?? '';
+  // Leggi valori dal DOM
+  const vals = {
+    indirizzo: document.getElementById('ea-ind')?.value.trim() ?? '',
+    cap:       document.getElementById('ea-cap')?.value.trim() ?? '',
+    citta:     document.getElementById('ea-ci')?.value.trim() ?? '',
+    pr:        (document.getElementById('ea-pr')?.value.trim() ?? '').toUpperCase(),
+    dominio:   (document.getElementById('ea-dom')?.value.trim() ?? '').toLowerCase(),
+    piva:      document.getElementById('ea-pi')?.value.trim() ?? '',
+    stato:     document.getElementById('ea-st')?.value ?? '',
+  };
 
-  console.log('saveAnagrafica - dominio letto:', dom);
+  // Feedback visivo — mostra spinner
+  const box = document.getElementById('anagrafica-'+id);
+  if(box) box.innerHTML = '<div style="padding:16px;text-align:center;color:var(--ink3);font-family:var(--fm);font-size:11px"><span class="pulse" style="display:inline-block;margin-right:6px"></span>SALVATAGGIO...</div>';
 
-  // Aggiorna locale
-  clienti = clienti.map(c => c.id===id ? {...c,
-    indirizzo: ind, cap, citta: ci, pr, dominio: dom, piva: pi, stato: st
-  } : c);
+  // Aggiorna localStorage come cache
+  clienti = clienti.map(c => c.id===id ? {...c, ...vals} : c);
   W('_clienti', clienti);
 
-  // Invia a Sheets
+  // Invia a Sheets e aspetta conferma
   const c = clienti.find(x=>x.id===id);
-  console.log('pushSheet dominio:', c?.dominio);
-  pushSheet(WH_CLIENTE, {...c, _azione:'update'}); // non await — non bloccare il render
+  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
 
-  // Renderizza subito con i nuovi dati
-  renderScheda(id);
+  if(ok) {
+    // Rileggi da Sheets per aggiornare tutto
+    await syncClienti();
+    // Riapri la scheda con i dati aggiornati
+    renderScheda(id);
+  } else {
+    // Offline — mostra comunque i dati locali
+    renderScheda(id);
+  }
 }
 
 function editReferenti(id) {
@@ -1138,14 +1146,12 @@ function editReferenti(id) {
 
 async function saveReferenti(id) {
   const get = eid => (document.getElementById(eid)?.value||'').split('\n').map(s=>s.trim()).filter(Boolean).join(' | ');
-  clienti = clienti.map(c => c.id===id ? {...c,
-    contatto: get('er-ref'),
-    numero:   get('er-tel'),
-    mail:     get('er-mail')
-  } : c);
+  const vals = { contatto: get('er-ref'), numero: get('er-tel'), mail: get('er-mail') };
+  clienti = clienti.map(c => c.id===id ? {...c, ...vals} : c);
   W('_clienti', clienti);
   const c = clienti.find(x=>x.id===id);
-  await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  if(ok) { await syncClienti(); }
   renderScheda(id);
 }
 
@@ -1159,11 +1165,12 @@ function editDescrizione(id) {
 }
 
 async function saveDescrizione(id) {
-  const txt = document.getElementById('ed-txt')?.value.trim()||'';
+  const txt = document.getElementById('ed-txt')?.value.trim() || '';
   clienti = clienti.map(c => c.id===id ? {...c, descrizione:txt} : c);
   W('_clienti', clienti);
   const c = clienti.find(x=>x.id===id);
-  await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  if(ok) { await syncClienti(); }
   renderScheda(id);
 }
 
@@ -1187,79 +1194,19 @@ function editConsumi(id) {
 
 async function saveConsumi(id) {
   const cons = {
-    barre:         document.getElementById('ec-barre')?.value.trim()||'',
-    piastre:       document.getElementById('ec-piastre')?.value.trim()||'',
-    profili:       document.getElementById('ec-profili')?.value.trim()||'',
-    lamiere:       document.getElementById('ec-lamiere')?.value.trim()||'',
-    note_generali: document.getElementById('ec-note_generali')?.value.trim()||'',
+    barre:         document.getElementById('ec-barre')?.value.trim() || '',
+    piastre:       document.getElementById('ec-piastre')?.value.trim() || '',
+    profili:       document.getElementById('ec-profili')?.value.trim() || '',
+    lamiere:       document.getElementById('ec-lamiere')?.value.trim() || '',
+    note_generali: document.getElementById('ec-note_generali')?.value.trim() || '',
   };
   clienti = clienti.map(c => c.id===id ? {...c, consumi:cons} : c);
   W('_clienti', clienti);
   const c = clienti.find(x=>x.id===id);
-  await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
+  if(ok) { await syncClienti(); }
   renderScheda(id);
 }
-
-/* ═══════════════════════════════════════════════════
-   EDIT VISITE DA SCHEDA
-═══════════════════════════════════════════════════ */
-async function aggiungiVisitaDaScheda(az) {
-  openMo(`<div class="mo-ttl">Nuova visita<button class="mo-x" onclick="closeMo()">✕</button></div>
-    <div class="fg"><label class="fl">Azienda</label><input class="fi" id="fvs-az" value="${esc(az)}" list="cl-dl4"><datalist id="cl-dl4">${clienti.map(c=>`<option value="${esc(c.azienda)}">`).join('')}</datalist></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="fvs-da" value="${oggi()}"></div>
-      <div class="fg"><label class="fl">Tipo</label><select class="fi" id="fvs-ti">${TVISITA.map(t=>`<option>${t}</option>`).join('')}</select></div>
-    </div>
-    <div class="fg"><label class="fl">Referente</label><input class="fi" id="fvs-re"></div>
-    <div class="fg"><label class="fl">Note</label><textarea class="fi" id="fvs-no" rows="4"></textarea></div>
-    <div class="mo-acts">
-      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
-      <button class="btn btn-p" onclick="saveVisitaDaScheda('${esc(az)}')">Salva</button>
-    </div>`);
-}
-
-async function saveVisitaDaScheda(az) {
-  const nv = {
-    id: uid(),
-    azienda: document.getElementById('fvs-az')?.value.trim()||az,
-    data:     document.getElementById('fvs-da')?.value,
-    tipo:     document.getElementById('fvs-ti')?.value,
-    referente:document.getElementById('fvs-re')?.value.trim(),
-    note:     document.getElementById('fvs-no')?.value.trim()
-  };
-  visite = [nv, ...visite]; W('_visite', visite);
-  clienti = clienti.map(c=>c.azienda===nv.azienda?{...c,ultima_visita:nv.data}:c);
-  W('_clienti', clienti);
-  await pushSheet(WH_VISITA, nv);
-  closeMo();
-  const cid = clienti.find(c=>c.azienda===nv.azienda)?.id;
-  if(cid) renderScheda(cid);
-}
-
-async function delVisitaInScheda(vid, cid) {
-  if(!confirm('Eliminare questa visita?')) return;
-  visite = visite.filter(v=>v.id!==vid);
-  W('_visite', visite);
-  renderScheda(cid);
-}
-
-async function saveVisitaEdit(vid) {
-  const upd = {
-    id:       vid,
-    azienda:  document.getElementById('fve-az')?.value.trim(),
-    data:     document.getElementById('fve-da')?.value,
-    tipo:     document.getElementById('fve-ti')?.value,
-    referente:document.getElementById('fve-re')?.value.trim(),
-    note:     document.getElementById('fve-no')?.value.trim()
-  };
-  visite = visite.map(v=>v.id===vid?{...v,...upd}:v);
-  W('_visite', visite);
-  await pushSheet(WH_VISITA, upd);
-  closeMo();
-  const cid = clienti.find(c=>c.azienda===upd.azienda)?.id;
-  if(cid) renderScheda(cid); else renderVisite();
-}
-
 
 async function caricaDescrizione(id) {
   const c = clienti.find(x=>x.id===id);
