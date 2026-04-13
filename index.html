@@ -1384,13 +1384,23 @@ function normMail(m) {
   const clienteNome = (!raw.includes('{')?raw:'')||parsed?.cliente_riconosciuto||'';
   const isNuovo = g(['CLIENTE_NUOVO','cliente_nuovo'])==='SI';
   // Un cliente è "nuovo" solo se CLIENTE_NUOVO=SI E non è già nel CRM
-  const clienteNelCRM = clienteNome ? clienti.some(c =>
-    c.azienda.toLowerCase() === clienteNome.toLowerCase() ||
-    c.azienda.toLowerCase().includes(clienteNome.toLowerCase().split(' ')[0]) ||
-    clienteNome.toLowerCase().includes(c.azienda.toLowerCase().split(' ')[0])
-  ) : false;
+  // Matching più preciso: prima controlla dominio email, poi nome esatto
+  const dominioMail = g(['DOMINIO_CLIENTE','dominio_cliente']) || '';
+  const clienteNelCRM = clienteNome ? clienti.some(c => {
+    const nomeC = c.azienda.toLowerCase();
+    const nomeM = clienteNome.toLowerCase();
+    // Match esatto
+    if (nomeC === nomeM) return true;
+    // Match dominio email con dominio salvato nel CRM
+    if (dominioMail && c.dominio && c.dominio.toLowerCase().includes(dominioMail.toLowerCase())) return true;
+    // Match parziale solo se entrambi i nomi hanno almeno 2 parole significative in comune
+    const wordsC = nomeC.split(/\s+/).filter(w=>w.length>3);
+    const wordsM = nomeM.split(/\s+/).filter(w=>w.length>3);
+    const comuni = wordsC.filter(w=>wordsM.includes(w));
+    return comuni.length >= 2;
+  }) : false;
   // Una mail è "inbox" se:
-  // 1. CLIENTE_NUOVO=SI da n8n E non è già nel CRM
+  // 1. CLIENTE_NUOVO=SI da n8n E non è già nel CRM (con matching preciso)
   // 2. OPPURE cliente vuoto E mittente esterno E rilevante (mail vecchie pre-v3)
   const da_val = g(['DA','da']);
   const mittenteEsterno = !da_val.toLowerCase().includes('comefimetalli.it');
