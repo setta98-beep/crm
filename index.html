@@ -474,7 +474,11 @@ let mlTab   = 'all';
 /* ═══════════════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════════════ */
-const uid  = () => Math.random().toString(36).slice(2,9);
+const uid = () => {
+  const nums = clienti.map(c => { const m = (c.id||'').match(/^c(\d+)$/); return m ? parseInt(m[1]) : 0; });
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return 'c' + String(next).padStart(4, '0');
+};
 const ini  = s => (s||'?').split(/[\s|]+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const esc  = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const fd   = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}) : '—';
