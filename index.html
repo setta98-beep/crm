@@ -430,8 +430,8 @@ textarea.edit-field{resize:vertical;min-height:80px}
   <div class="scroll" id="report-body"></div>
 </div>
 
-<!-- IMPOSTAZIONI (in fondo al report) -->
-<div id="s-settings" class="scr" style="display:none">
+<!-- CONFIG -->
+<div id="s-settings" class="scr">
   <div class="hdr">
     <div class="hl">JARVIS · CONFIG</div>
     <div><div class="ht">Impostazioni</div><div class="hs">// CONFIGURAZIONE</div></div>
@@ -700,8 +700,6 @@ function go(id, btn) {
     const k = getApiKey();
     const el = document.getElementById('set-apikey');
     if (el) el.value = k ? '●●●●●●●●●●●●' : '';
-    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-    document.getElementById('s-settings').classList.add('on');
   }
   flushQueue();
 }
