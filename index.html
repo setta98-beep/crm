@@ -489,8 +489,8 @@ const fs   = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',mont
 const oggi = () => new Date().toISOString().slice(0,10);
 const daysDiff = d => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 999;
 
-const STATI = ['Visitare regolarm.','Contatto a distanza','Visitare in zona','Consulente','Prospect','Inattivo'];
-const SCL = {'Visitare regolarm.':'bc','Contatto a distanza':'bp','Visitare in zona':'ba','Consulente':'bgr','Prospect':'bg','Inattivo':'br'};
+const STATI = ['Visitare regolarm.','Contatto a distanza','Visitare in zona','Consulente','Prospect','Inattivo','Fornitore'];
+const SCL = {'Visitare regolarm.':'bc','Contatto a distanza':'bp','Visitare in zona':'ba','Consulente':'bgr','Prospect':'bg','Inattivo':'br','Fornitore':'bg'};
 const TVI = {'Visita':'bc','Email':'bp','Telefonata':'bg','Appunti':'bgr','Offerta inviata':'ba'};
 const PRC = {'Alta':'br','Media':'ba','Bassa':'bg'};
 const TVISITA = ['Visita','Appunti','Telefonata','Email','Offerta inviata','Post-vendita','Video call'];
