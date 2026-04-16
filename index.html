@@ -857,27 +857,83 @@ function renderClienti() {
   const el = document.getElementById('cl-list');
 
   if (clView === 'radar') {
-    // Radar abbandono: top spender inattivi >15gg
-    const radar = clienti.filter(c => {
-      const cons = c.consumi||{};
-      const isTop = CONS_KEYS.some(k => parseInt(cons[k])||0 >= 4);
-      return isTop && daysDiff(c.ultima_visita) > 15;
-    }).sort((a,b) => daysDiff(b.ultima_visita) - daysDiff(a.ultima_visita));
-    el.innerHTML = radar.length === 0
-      ? `<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN CLIENTE A RISCHIO</div>`
-      : `<div style="font-size:10px;color:var(--red);font-family:var(--fm);letter-spacing:1px;margin-bottom:10px">⚠ ${radar.length} CLIENTI TOP INATTIVI DA >15 GIORNI</div>` +
-        radar.map(c => `
-          <div class="card tap card-pulse" onclick="openScheda('${c.id}')">
-            <div class="row">
-              <div class="av">${ini(c.azienda)}</div>
-              <div class="ri">
-                <div class="rn">${esc(c.azienda)}</div>
-                <div class="rs">${daysDiff(c.ultima_visita)} giorni fa · ${esc(c.citta||'—')}</div>
-              </div>
-              <span class="b br">⚠ INATTIVO</span>
-            </div>
-            ${consMini(c.consumi)}
-          </div>`).join('');
+    // Radar abbandono:
+    // - ARANCIONE: nessuna interazione (mail+visite) da >60gg
+    // - BLU: nessuna visita fisica da >90gg
+    // - ROSSO: entrambe
+    const oggi_d = new Date();
+
+    const ultimaInterazione = c => {
+      // Prendi la data più recente tra visite e mail associate
+      const vDates = visite.filter(v => v.azienda === c.azienda).map(v => v.data).filter(Boolean);
+      const mDates = mailLog.map(m => {
+        const nm = normMail(m);
+        return nm.cliente === c.azienda ? nm.data : null;
+      }).filter(Boolean);
+      const all = [...vDates, ...mDates, c.ultima_visita||''].filter(Boolean).sort().reverse();
+      return all[0] || '';
+    };
+
+    const ultimaVisitaFisica = c => {
+      const vFisiche = visite.filter(v => v.azienda === c.azienda && ['Visita','Telefonata'].includes(v.tipo));
+      if (!vFisiche.length) return c.ultima_visita || '';
+      return vFisiche.map(v => v.data).sort().reverse()[0];
+    };
+
+    const radarClienti = clienti
+      .filter(c => c.stato !== 'Inattivo' && c.stato !== 'Fornitore')
+      .map(c => {
+        const gi = daysDiff(ultimaInterazione(c));
+        const gv = daysDiff(ultimaVisitaFisica(c));
+        const noInterazione = gi > 60;
+        const noVisita = gv > 90;
+        let tipo = null;
+        if (noInterazione && noVisita) tipo = 'rosso';
+        else if (noInterazione) tipo = 'arancione';
+        else if (noVisita) tipo = 'blu';
+        return tipo ? {...c, _gi: gi, _gv: gv, _tipo: tipo} : null;
+      })
+      .filter(Boolean)
+      .sort((a,b) => {
+        const p = {rosso:0, arancione:1, blu:2};
+        return p[a._tipo] - p[b._tipo] || b._gi - a._gi;
+      });
+
+    const colori = {
+      rosso:    {bg:'rgba(255,68,68,.07)',  border:'rgba(255,68,68,.3)',  badge:'var(--red)',    label:'🔴 CRITICO'},
+      arancione:{bg:'rgba(255,179,0,.07)',  border:'rgba(255,179,0,.3)',  badge:'var(--amber)',  label:'🟠 INATTIVO'},
+      blu:      {bg:'rgba(0,149,255,.07)',  border:'rgba(0,149,255,.3)',  badge:'#0095ff',       label:'🔵 NON VISITATO'}
+    };
+
+    const rossi    = radarClienti.filter(c => c._tipo === 'rosso').length;
+    const arancioni= radarClienti.filter(c => c._tipo === 'arancione').length;
+    const blu_n    = radarClienti.filter(c => c._tipo === 'blu').length;
+
+    el.innerHTML = radarClienti.length === 0
+      ? '<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN CLIENTE A RISCHIO 🎉</div>'
+      : '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
+        + (rossi    ? '<span style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--red)">🔴 '+rossi+' critici</span>' : '')
+        + (arancioni? '<span style="background:rgba(255,179,0,.1);border:1px solid rgba(255,179,0,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--amber)">🟠 '+arancioni+' inattivi</span>' : '')
+        + (blu_n    ? '<span style="background:rgba(0,149,255,.1);border:1px solid rgba(0,149,255,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:#0095ff">🔵 '+blu_n+' non visitati</span>' : '')
+        + '</div>'
+        + radarClienti.map(c => {
+            const col = colori[c._tipo];
+            return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(''+c.id+'')">'
+              + '<div class="row">'
+              + '<div class="av" style="color:'+col.badge+'">' + ini(c.azienda) + '</div>'
+              + '<div class="ri">'
+              + '<div class="rn">'+esc(c.azienda)+'</div>'
+              + '<div class="rs" style="font-family:var(--fm);font-size:11px">'
+              + (c._tipo !== 'blu' ? '📵 Nessuna interazione da '+c._gi+'gg' : '')
+              + (c._tipo === 'rosso' ? ' · ' : '')
+              + (c._tipo !== 'arancione' ? '👣 Nessuna visita da '+c._gv+'gg' : '')
+              + '</div>'
+              + '</div>'
+              + '<span class="b" style="background:'+col.bg+';border:1px solid '+col.border+';color:'+col.badge+';font-size:9px">'+col.label+'</span>'
+              + '</div>'
+              + consMini(c.consumi)
+              + '</div>';
+          }).join('');
     return;
   }
 
