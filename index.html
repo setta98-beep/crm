@@ -442,6 +442,7 @@ const DD_N = [{"id":"n0001","azienda":"MECCANIA","testo":"PASSARE A TROVARE","da
 const SHEET_ID   = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
 const WH_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/salva-cliente';
 const WH_NUOVO_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-cliente-inbox';
+const WH_NUOVO_FORNITORE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-fornitore-inbox';
 const COLLEGHI_COMEFI = ["emanuela criscione","daria d'ettorre","daria dettorre","valentina clapasson","nicole casazza","valentina mammone","tamara borin","davide settanni","daniele settanni"];
 const DOMINI_GENERICI = ['gmail.com','yahoo.com','yahoo.it','hotmail.com','hotmail.it','libero.it','outlook.com','outlook.it','live.com','live.it','icloud.com','virgilio.it','tiscali.it','tin.it','fastwebnet.it','alice.it','pec.it'];
 const WH_VISITA  = 'https://danielesettanni.app.n8n.cloud/webhook/salva-visita';
@@ -1497,10 +1498,11 @@ function renderMail() {
                 <div style="font-size:12px;color:var(--ink)">Crea scheda <strong>${nomeGuess}</strong></div>
                 <div style="font-size:11px;color:var(--ink3);font-family:var(--fm)">Dominio: @${dom}</div>
               </div>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox(${i},'${esc(nomeGuess)}','${esc(dom)}')">✓ CREA SCHEDA</button>
-                <button class="btn btn-s" style="flex:1;justify-content:center;font-size:12px" onclick="ignoraInbox(${i})">✕ IGNORA</button>
+              <div style="display:flex;gap:8px;margin-bottom:6px">
+                <button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox(${i},'${esc(nomeGuess)}','${esc(dom)}','cliente')">👤 CLIENTE</button>
+                <button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px;background:rgba(187,134,252,.15);border-color:var(--purple);color:var(--purple)" onclick="approvaClienteInbox(${i},'${esc(nomeGuess)}','${esc(dom)}','fornitore')">🏭 FORNITORE</button>
               </div>
+              <button class="btn btn-s" style="width:100%;justify-content:center;font-size:12px" onclick="ignoraInbox(${i})">✕ IGNORA</button>
             </div>`;
         }).join('');
     return;
@@ -1975,7 +1977,7 @@ function saveMailManuale(cid) {
    INIT
 ═══════════════════════════════════════════════════ */
 
-function approvaClienteInbox(idx, nomeGuess, dom) {
+function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
   const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
   const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
   const m = inbox[idx]; if(!m) return;
@@ -2011,10 +2013,10 @@ function approvaClienteInbox(idx, nomeGuess, dom) {
     <div class="fg"><label class="fl">Stato</label><select class="fi" id="ni-st">${STATI.map(s=>`<option${s==='Prospect'?' selected':''}>${s}</option>`).join('')}</select></div>
     <div class="mo-acts">
       <button class="btn btn-s" onclick="closeMo()">Annulla</button>
-      <button class="btn btn-p" onclick="confermaCreaCliente(${idx})">✓ CREA SCHEDA</button>
+      <button class="btn btn-p" onclick="confermaCreaCliente(${idx}, '${tipo}')">✓ CREA ${tipo.toUpperCase()}</button>
     </div>`);
 }
-function confermaCreaCliente(idx) {
+function confermaCreaCliente(idx, tipo='cliente') {
   const az = (document.getElementById('ni-az')?.value||'').trim().toUpperCase();
   if (!az) return;
   const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
@@ -2033,13 +2035,14 @@ function confermaCreaCliente(idx) {
     mail: document.getElementById('ni-ma')?.value.trim()||'',
     dominio: document.getElementById('ni-dom')?.value.trim().toLowerCase()||'',
     piva: document.getElementById('ni-pi')?.value.trim()||'',
-    stato: document.getElementById('ni-st')?.value||'Prospect',
+    stato: document.getElementById('ni-st')?.value||(tipo==='fornitore'?'Fornitore':'Prospect'),
     ultima_visita: m?.data||oggi(),
     descrizione: '',
     consumi: {barre:'',piastre:'',profili:'',lamiere:'',note_generali:''}
   };
   clienti = [...clienti, nc];
   W('_clienti', clienti);
+  pushSheet(tipo === 'fornitore' ? WH_NUOVO_FORNITORE : WH_NUOVO_CLIENTE, {...nc});
 
   // Aggiorna il mailLog per associare questa mail al nuovo cliente
   // Trova la riga originale nel mailLog e aggiorna CLIENTE_RICONOSCIUTO
