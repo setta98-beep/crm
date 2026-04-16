@@ -2217,12 +2217,28 @@ async function elaboraBiglietto(event) {
     + '</div>');
 
   try {
-    // Converti immagine in base64
+    // Converti e comprimi immagine (max 4MB per API Anthropic)
     const base64 = await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload = () => res(reader.result.split(',')[1]);
-      reader.onerror = rej;
-      reader.readAsDataURL(file);
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        // Ridimensiona se troppo grande
+        const MAX = 1600;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        // Comprimi come JPEG qualità 0.7
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        res(dataUrl.split(',')[1]);
+      };
+      img.onerror = rej;
+      img.src = url;
     });
 
     // Chiama n8n webhook (proxy per Claude vision)
@@ -2231,7 +2247,7 @@ async function elaboraBiglietto(event) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         image: base64,
-        mediaType: file.type || 'image/jpeg',
+        mediaType: 'image/jpeg',
         apiKey: getApiKey()
       })
     });
