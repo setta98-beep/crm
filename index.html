@@ -360,6 +360,7 @@ textarea.edit-field{resize:vertical;min-height:80px}
       <button class="tab on" onclick="setClView('list',this)">LISTA</button>
       <button class="tab" onclick="setClView('radar',this)">RADAR</button>
       <button class="tab" onclick="setClView('opport',this)">OPPORTUNITÀ</button>
+      <button class="tab" id="tab-rinviati" onclick="setClView('rinviati',this)">⏱ RINVIATI</button>
     </div>
     <div id="cl-list"></div>
   </div>
@@ -694,6 +695,22 @@ async function syncTask() {
 /* ═══════════════════════════════════════════════════
    NAVIGAZIONE
 ═══════════════════════════════════════════════════ */
+function annullaRinvio(id) {
+  const rinvii = S('_rinvii') || {};
+  delete rinvii[id];
+  W('_rinvii', rinvii);
+  renderClienti();
+}
+
+function rinviaRadar(id) {
+  // Salva rinvio in localStorage senza toccare i dati reali
+  const rinvii = S('_rinvii') || {};
+  const fino = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  rinvii[id] = fino;
+  W('_rinvii', rinvii);
+  renderClienti();
+}
+
 function setRadarFiltro(tipo) {
   radarFiltro = radarFiltro === tipo ? null : tipo;
   renderClienti();
@@ -903,8 +920,11 @@ function renderClienti() {
       return visiteFisichePerCliente[c.azienda] || c.ultima_visita || '';
     };
 
+    const rinvii = S('_rinvii') || {};
+    const oggi_str = new Date().toISOString().slice(0, 10);
     const radarClienti = clienti
       .filter(c => c.stato !== 'Inattivo' && c.stato !== 'Fornitore')
+      .filter(c => !rinvii[c.id] || rinvii[c.id] < oggi_str)
       .map(c => {
         const gi = daysDiff(ultimaInterazione(c));
         const gv = daysDiff(ultimaVisitaFisica(c));
@@ -942,7 +962,7 @@ function renderClienti() {
         + '</div>'
         + (radarFiltro ? radarClienti.filter(c => c._tipo === radarFiltro) : radarClienti).map(c => {
             const col = colori[c._tipo];
-            return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(\"'+c.id+'\")">'
+            return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(&quot;'+c.id+'&quot;)">'
               + '<div class="row">'
               + '<div class="av" style="color:'+col.badge+'">' + ini(c.azienda) + '</div>'
               + '<div class="ri">'
@@ -956,6 +976,40 @@ function renderClienti() {
               + '<span class="b" style="background:'+col.bg+';border:1px solid '+col.border+';color:'+col.badge+';font-size:9px">'+col.label+'</span>'
               + '</div>'
               + consMini(c.consumi)
+              + '<div style="margin-top:8px;text-align:right">'
+              + '<button onclick="event.stopPropagation();rinviaRadar(&quot;'+c.id+'&quot;)" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:10px;font-family:var(--fm);color:var(--ink3);cursor:pointer">⏱ Rinvia 30gg</button>'
+              + '</div>'
+              + '</div>';
+          }).join('');
+    return;
+  }
+
+  if (clView === 'rinviati') {
+    const rinvii = S('_rinvii') || {};
+    const oggi_str = new Date().toISOString().slice(0, 10);
+    const rinviati = clienti
+      .filter(c => rinvii[c.id] && rinvii[c.id] >= oggi_str)
+      .map(c => ({...c, _fino: rinvii[c.id]}))
+      .sort((a,b) => a._fino.localeCompare(b._fino));
+
+    // Aggiorna badge tab
+    const tabR = document.getElementById('tab-rinviati');
+    if (tabR) tabR.textContent = rinviati.length > 0 ? '⏱ RINVIATI ('+rinviati.length+')' : '⏱ RINVIATI';
+
+    el.innerHTML = rinviati.length === 0
+      ? '<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN CLIENTE RINVIATO</div>'
+      : '<div style="font-size:10px;color:var(--ink3);font-family:var(--fm);letter-spacing:1px;margin-bottom:10px">⏱ '+rinviati.length+' CLIENTI IN PAUSA RADAR</div>'
+        + rinviati.map(c => {
+            const gg = Math.ceil((new Date(c._fino) - new Date()) / (1000*60*60*24));
+            return '<div class="card tap" style="border-left:2px solid rgba(255,179,0,.4)" onclick="openScheda(&quot;'+c.id+'&quot;)">'
+              + '<div class="row">'
+              + '<div class="av">'+ini(c.azienda)+'</div>'
+              + '<div class="ri">'
+              + '<div class="rn">'+esc(c.azienda)+'</div>'
+              + '<div class="rs" style="font-family:var(--fm);font-size:11px">⏱ Rinviato · scade tra '+gg+' giorni ('+c._fino+')</div>'
+              + '</div>'
+              + '<button onclick="event.stopPropagation();annullaRinvio(&quot;'+c.id+'&quot;)" style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);border-radius:6px;padding:4px 8px;font-size:10px;font-family:var(--fm);color:var(--red);cursor:pointer;flex-shrink:0">✕ Annulla</button>'
+              + '</div>'
               + '</div>';
           }).join('');
     return;
