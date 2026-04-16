@@ -693,6 +693,11 @@ async function syncTask() {
 /* ═══════════════════════════════════════════════════
    NAVIGAZIONE
 ═══════════════════════════════════════════════════ */
+function setRadarFiltro(tipo) {
+  radarFiltro = radarFiltro === tipo ? null : tipo;
+  renderClienti();
+}
+
 function goTo(id) {
   // Versione senza btn per chiamate da header icons
   document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
@@ -929,11 +934,12 @@ function renderClienti() {
     el.innerHTML = radarClienti.length === 0
       ? '<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN CLIENTE A RISCHIO 🎉</div>'
       : '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'
-        + (rossi    ? '<span style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--red)">🔴 '+rossi+' critici</span>' : '')
-        + (arancioni? '<span style="background:rgba(255,179,0,.1);border:1px solid rgba(255,179,0,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--amber)">🟠 '+arancioni+' inattivi</span>' : '')
-        + (blu_n    ? '<span style="background:rgba(0,149,255,.1);border:1px solid rgba(0,149,255,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:#0095ff">🔵 '+blu_n+' non visitati</span>' : '')
+        + (rossi    ? '<span onclick="setRadarFiltro(&apos;rosso&apos;)" style="cursor:pointer;background:'+(radarFiltro==='rosso'?'rgba(255,68,68,.3)':'rgba(255,68,68,.1)')+';border:1px solid rgba(255,68,68,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--red)">🔴 '+rossi+' critici</span>' : '')
+        + (arancioni? '<span onclick="setRadarFiltro(&apos;arancione&apos;)" style="cursor:pointer;background:'+(radarFiltro==='arancione'?'rgba(255,179,0,.3)':'rgba(255,179,0,.1)')+';border:1px solid rgba(255,179,0,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--amber)">🟠 '+arancioni+' inattivi</span>' : '')
+        + (blu_n    ? '<span onclick="setRadarFiltro(&apos;blu&apos;)" style="cursor:pointer;background:'+(radarFiltro==='blu'?'rgba(0,149,255,.3)':'rgba(0,149,255,.1)')+';border:1px solid rgba(0,149,255,.3);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:#0095ff">🔵 '+blu_n+' non visitati</span>' : '')
+        + (radarFiltro ? '<span onclick="setRadarFiltro(null)" style="cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fm);color:var(--ink3)">✕ tutti</span>' : '')
         + '</div>'
-        + radarClienti.map(c => {
+        + (radarFiltro ? radarClienti.filter(c => c._tipo === radarFiltro) : radarClienti).map(c => {
             const col = colori[c._tipo];
             return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(\"'+c.id+'\")">'
               + '<div class="row">'
