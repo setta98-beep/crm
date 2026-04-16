@@ -1681,20 +1681,32 @@ function parsingLocale(t) {
 
   // ── Trova cliente ──────────────────────────────────────────────────────
   let cliente = null, maxS = 0;
+  // Prima passa: cerca match esatto del nome intero (priorità massima)
   for (const c of clienti) {
-    const az = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'');
-    // Match esatto (es. "sicav" trova "SICAV")
-    if (tl.includes(az) && az.length > 2) {
-      if (az.length > maxS) { maxS = az.length; cliente = c.azienda; }
-      continue;
+    const az = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
+    if (az.length < 2) continue;
+    // Match esatto come parola intera nel testo
+    const regex = new RegExp('\\b' + az.replace(/\s+/g,'\\s+') + '\\b', 'i');
+    if (regex.test(tl)) {
+      // Preferisce il match più specifico (nome più corto = più preciso se è parola intera)
+      if (cliente === null || az.split(/\s+/).length < maxS) {
+        maxS = az.split(/\s+/).length;
+        cliente = c.azienda;
+      }
     }
-    // Match per parole
-    const pp = az.split(/\s+/);
-    let s = 0;
-    for (const p of pp) if (p.length>2 && tl.includes(p)) s += p.length;
-    if (s > maxS) { maxS = s; cliente = c.azienda; }
   }
-  if (maxS < 2) cliente = null;
+  // Seconda passa: match per parole solo se nessun match esatto trovato
+  if (!cliente) {
+    let bestScore = 0;
+    for (const c of clienti) {
+      const az = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'');
+      const pp = az.split(/\s+/);
+      let s = 0;
+      for (const p of pp) if (p.length>3 && tl.includes(p)) s += p.length;
+      if (s > bestScore) { bestScore = s; cliente = c.azienda; }
+    }
+    if (bestScore < 4) cliente = null;
+  }
 
   // ── Tipo interazione ───────────────────────────────────────────────────
   const tipo = /telefon/.test(tl) ? 'telefonata'
@@ -1771,13 +1783,22 @@ function parsingLocale(t) {
 
   // Estrai referente dal testo (pattern: "parlato con X", "ho visto X")
   let referente = null;
-  // Cattura solo nome proprio (1-2 parole), si ferma a verbi/preposizioni
-  const STOP = /^(consumano|consume|comprano|usano|vogliono|hanno|fanno|sono|con|che|e|il|la|le|lo|gli|ci|mi|ha|ho|ci|da|di|a|in|per|non|si)$/;
-  const refMatch = tl.match(/(?:parlato con|visto|incontrato|ho parlato con|mi ha risposto|contattato)\s+([a-zàèìòù]+)(?:\s+([a-zàèìòù]+))?/i);
+  // Cattura solo nome proprio, esclude preposizioni e parole funzionali
+  const STOP_WORDS = new Set(['con','che','e','il','la','le','lo','gli','ci','mi','ha','ho','da','di','a','in','per','non','si','loro','consumano','comprano','usano','vogliono','hanno','fanno','sono','anche','poi','poi','mi','ho','abbiamo','ha','aveva','vuole','vende','acquista']);
+  const refMatch = tl.match(/(?:parlato con con|parlato con|ho parlato con|visto|incontrato|mi ha risposto|contattato)\s+([a-zàèìòù]+)(?:\s+([a-zàèìòù]+))?/i);
   if (refMatch) {
-    let nome = refMatch[1];
-    if (refMatch[2] && !STOP.test(refMatch[2])) nome += ' ' + refMatch[2];
-    referente = nome.charAt(0).toUpperCase() + nome.slice(1);
+    let parola1 = refMatch[1].toLowerCase();
+    let parola2 = refMatch[2] ? refMatch[2].toLowerCase() : null;
+    // Salta parola1 se è stop word (es. "con con Manuela")
+    if (STOP_WORDS.has(parola1) && parola2 && !STOP_WORDS.has(parola2)) {
+      parola1 = parola2;
+      parola2 = null;
+    }
+    if (!STOP_WORDS.has(parola1)) {
+      let nome = parola1;
+      if (parola2 && !STOP_WORDS.has(parola2)) nome += ' ' + parola2;
+      referente = nome.charAt(0).toUpperCase() + nome.slice(1);
+    }
   }
 
   return {
