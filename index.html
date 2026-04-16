@@ -1682,12 +1682,19 @@ function parsingLocale(t) {
   // ── Trova cliente ──────────────────────────────────────────────────────
   let cliente = null, maxS = 0;
   for (const c of clienti) {
-    const pp = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/);
+    const az = c.azienda.toLowerCase().replace(/[^a-z0-9\s]/g,'');
+    // Match esatto (es. "sicav" trova "SICAV")
+    if (tl.includes(az) && az.length > 2) {
+      if (az.length > maxS) { maxS = az.length; cliente = c.azienda; }
+      continue;
+    }
+    // Match per parole
+    const pp = az.split(/\s+/);
     let s = 0;
     for (const p of pp) if (p.length>2 && tl.includes(p)) s += p.length;
     if (s > maxS) { maxS = s; cliente = c.azienda; }
   }
-  if (maxS < 3) cliente = null;
+  if (maxS < 2) cliente = null;
 
   // ── Tipo interazione ───────────────────────────────────────────────────
   const tipo = /telefon/.test(tl) ? 'telefonata'
@@ -1764,8 +1771,14 @@ function parsingLocale(t) {
 
   // Estrai referente dal testo (pattern: "parlato con X", "ho visto X")
   let referente = null;
-  const refMatch = tl.match(/(?:parlato con|visto|incontrato|mi ha risposto|risponde|chiesto di|contattato)\s+([a-zàèìòù]+(?:\s+[a-zàèìòù]+)?)/i);
-  if (refMatch) referente = refMatch[1].charAt(0).toUpperCase() + refMatch[1].slice(1);
+  // Cattura solo nome proprio (1-2 parole), si ferma a verbi/preposizioni
+  const STOP = /^(consumano|consume|comprano|usano|vogliono|hanno|fanno|sono|con|che|e|il|la|le|lo|gli|ci|mi|ha|ho|ci|da|di|a|in|per|non|si)$/;
+  const refMatch = tl.match(/(?:parlato con|visto|incontrato|ho parlato con|mi ha risposto|contattato)\s+([a-zàèìòù]+)(?:\s+([a-zàèìòù]+))?/i);
+  if (refMatch) {
+    let nome = refMatch[1];
+    if (refMatch[2] && !STOP.test(refMatch[2])) nome += ' ' + refMatch[2];
+    referente = nome.charAt(0).toUpperCase() + nome.slice(1);
+  }
 
   return {
     cliente,
