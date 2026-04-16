@@ -2042,7 +2042,7 @@ function confermaCreaCliente(idx, tipo='cliente') {
   };
   clienti = [...clienti, nc];
   W('_clienti', clienti);
-  pushSheet(tipo === 'fornitore' ? WH_NUOVO_FORNITORE : WH_NUOVO_CLIENTE, {...nc});
+  pushSheet(WH_NUOVO_CLIENTE, {...nc});
 
   // Aggiorna il mailLog per associare questa mail al nuovo cliente
   // Trova la riga originale nel mailLog e aggiorna CLIENTE_RICONOSCIUTO
