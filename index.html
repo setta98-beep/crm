@@ -1793,30 +1793,29 @@ function vModifica() {
   const nome = r.cliente || r.nuovo_cliente?.nome || '';
   const isNuovo = !r.cliente;
   const tipoV = r.tipo==='telefonata'?'Telefonata':r.tipo==='email'?'Email':'Visita';
-  const TVISITA_OPT = ['Visita','Telefonata','Email','Appunti','Offerta inviata'].map(t=>`<option${t===tipoV?' selected':''}>${t}</option>`).join('');
-  const STATI_OPT = STATI.map(s=>`<option${s==='Prospect'?' selected':''}>${s}</option>`).join('');
+  const TVISITA_OPT = ['Visita','Telefonata','Email','Appunti','Offerta inviata'].map(t=>'<option'+(t===tipoV?' selected':'')+'>'+t+'</option>').join('');
+  const STATI_OPT = STATI.map(s=>'<option'+(s==='Prospect'?' selected':'')+'>'+s+'</option>').join('');
+  const CLIENTI_OPT = clienti.map(c=>'<option value="'+esc(c.azienda)+'">').join('');
 
-  openMo(`<div class="mo-ttl">Verifica e salva<button class="mo-x" onclick="closeMo()">✕</button></div>
-    ${isNuovo ? `
-    <div style="background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--amber);font-family:var(--fm)">⚡ CLIENTE NON RICONOSCIUTO — compila i dati per crearlo</div>
-    <div class="fg"><label class="fl">Nome azienda *</label><input class="fi" id="vm-az" value="${esc(nome)}" placeholder="Nome azienda"></div>
-    <div style="display:grid;grid-template-columns:1fr 70px;gap:8px">
-      <div class="fg"><label class="fl">Città</label><input class="fi" id="vm-ci" value="" placeholder="Città"></div>
-      <div class="fg"><label class="fl">Prov.</label><input class="fi" id="vm-pr" value="" maxlength="2"></div>
-    </div>
-    <div class="fg"><label class="fl">Stato</label><select class="fi" id="vm-st">${STATI_OPT}</select></div>
-    ` : `
-    <div style="background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--cyan);font-family:var(--fm)">👤 ${esc(nome)}</div>
-    `}
-    <div style="height:1px;background:rgba(255,255,255,.06);margin:10px 0"></div>
-    <div class="fg"><label class="fl">Tipo interazione</label><select class="fi" id="vm-tipo">${TVISITA_OPT}</select></div>
-    <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="vm-data" value="${r.data||oggi()}"></div>
-    <div class="fg"><label class="fl">Referente</label><input class="fi" id="vm-ref" value="${esc(r.referente||'')}" placeholder="Nome referente"></div>
-    <div class="fg"><label class="fl">Note *</label><textarea class="fi" id="vm-note" rows="4">${esc(r.note||'')}</textarea></div>
-    <div class="mo-acts">
-      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
-      <button class="btn btn-p" onclick="vSalvaModificato(${isNuovo})">✓ SALVA</button>
-    </div>`);
+  let campoCliente = '';
+  if (isNuovo) {
+    campoCliente = '<div style="background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--amber);font-family:var(--fm)">⚡ CLIENTE NON RICONOSCIUTO — compila i dati per crearlo</div>'
+      + '<div class="fg"><label class="fl">Nome azienda *</label><input class="fi" id="vm-az" value="'+esc(nome)+'" placeholder="Nome azienda" list="vm-cl-list"><datalist id="vm-cl-list">'+CLIENTI_OPT+'</datalist></div>'
+      + '<div style="display:grid;grid-template-columns:1fr 70px;gap:8px"><div class="fg"><label class="fl">Città</label><input class="fi" id="vm-ci" value="" placeholder="Città"></div><div class="fg"><label class="fl">Prov.</label><input class="fi" id="vm-pr" value="" maxlength="2"></div></div>'
+      + '<div class="fg"><label class="fl">Stato</label><select class="fi" id="vm-st">'+STATI_OPT+'</select></div>';
+  } else {
+    campoCliente = '<div class="fg"><label class="fl">Cliente</label><input class="fi" id="vm-az" value="'+esc(nome)+'" placeholder="Nome azienda" list="vm-cl-list"><datalist id="vm-cl-list">'+CLIENTI_OPT+'</datalist></div>';
+  }
+
+  const html = '<div class="mo-ttl">Verifica e salva<button class="mo-x" onclick="closeMo()">✕</button></div>'
+    + campoCliente
+    + '<div style="height:1px;background:rgba(255,255,255,.06);margin:10px 0"></div>'
+    + '<div class="fg"><label class="fl">Tipo interazione</label><select class="fi" id="vm-tipo">'+TVISITA_OPT+'</select></div>'
+    + '<div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="vm-data" value="'+(r.data||oggi())+'"></div>'
+    + '<div class="fg"><label class="fl">Referente</label><input class="fi" id="vm-ref" value="'+esc(r.referente||'')+'" placeholder="Nome referente"></div>'
+    + '<div class="fg"><label class="fl">Note</label><textarea class="fi" id="vm-note" rows="4">'+esc(r.note||'')+'</textarea></div>'
+    + '<div class="mo-acts"><button class="btn btn-s" onclick="closeMo()">Annulla</button><button class="btn btn-p" onclick="vSalvaModificato('+isNuovo+')">✓ SALVA</button></div>';
+  openMo(html);
 }
 
 async function vSalvaModificato(isNuovo) {
@@ -1830,6 +1829,12 @@ async function vSalvaModificato(isNuovo) {
   const noteSel = document.getElementById('vm-note')?.value.trim() || r.note || '';
 
   let nome = r.cliente;
+
+  // Se cliente NON nuovo, permetti comunque correzione del nome
+  if (!isNuovo) {
+    const azCorr = (document.getElementById('vm-az')?.value||'').trim().toUpperCase();
+    if (azCorr) nome = azCorr;
+  }
 
   // Se cliente nuovo, crealo
   if (isNuovo) {
