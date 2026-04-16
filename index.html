@@ -1754,12 +1754,26 @@ function parsingLocale(t) {
     att.push({testo:'Follow-up ' + (cliente||''), scadenza: scad, priorita:'Media'});
   }
 
+  // Estrai consumi dal testo
+  const consumi = {
+    barre:   /barr[ae]|tub[io]|ergal/.test(tl),
+    piastre: /piastr[ae]/.test(tl),
+    profili: /profil[io]/.test(tl),
+    lamiere: /lamier[ae]/.test(tl),
+  };
+
+  // Estrai referente dal testo (pattern: "parlato con X", "ho visto X")
+  let referente = null;
+  const refMatch = tl.match(/(?:parlato con|visto|incontrato|mi ha risposto|risponde|chiesto di|contattato)\s+([a-zàèìòù]+(?:\s+[a-zàèìòù]+)?)/i);
+  if (refMatch) referente = refMatch[1].charAt(0).toUpperCase() + refMatch[1].slice(1);
+
   return {
     cliente,
     tipo,
-    referente: null,
+    referente,
     data: oggi(),
     note: t.charAt(0).toUpperCase() + t.slice(1),
+    consumi,
     attivita: att,
     nuovo_cliente: {nome: null}
   };
@@ -1856,6 +1870,22 @@ async function vSalvaModificato(isNuovo) {
   }
 
   closeMo();
+
+  // Aggiorna consumi cliente se r.consumi ha valori true
+  if (nome && r.consumi) {
+    clienti = clienti.map(c => {
+      if (c.azienda !== nome) return c;
+      const cons = {...(c.consumi||{})};
+      if (r.consumi.barre)   cons.barre   = cons.barre   || 'Sì (da voce)';
+      if (r.consumi.piastre) cons.piastre = cons.piastre || 'Sì (da voce)';
+      if (r.consumi.profili) cons.profili = cons.profili || 'Sì (da voce)';
+      if (r.consumi.lamiere) cons.lamiere = cons.lamiere || 'Sì (da voce)';
+      return {...c, consumi: cons};
+    });
+    W('_clienti', clienti);
+    const cUpd = clienti.find(c => c.azienda === nome);
+    if (cUpd) pushSheet(WH_CLIENTE, {...cUpd, _azione: 'update'});
+  }
 
   // Salva visita
   if (noteSel && nome) {
