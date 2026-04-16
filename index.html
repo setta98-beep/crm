@@ -441,6 +441,9 @@ const DD_V = [{"id":"v0000","azienda":"ACMI SPA","data":"2025-10-17","tipo":"App
 const DD_N = [{"id":"n0001","azienda":"MECCANIA","testo":"PASSARE A TROVARE","data":"2026-02-19","priorita":"Media","fatto":false},{"id":"n0002","azienda":"VER-MEC","testo":"PRENDERE APPUNTAMENTO","data":"2026-02-19","priorita":"Media","fatto":false},{"id":"n0003","azienda":"PROMEK ROBOTIC SOLUTION SRL","testo":"PASSARE A TROVARE NUOVAMENTE, NON SI SENTONO DA SETTEMBRE","data":"2026-02-20","priorita":"Media","fatto":false},{"id":"n0004","azienda":"STEAT SRL","testo":"DAVIDE HA GIRATO RICHIESTA A DARIA, CONTATTARE DOPO L'OFFERTA","data":"2026-02-20","priorita":"Media","fatto":false},{"id":"n0005","azienda":"PERANO SPA","testo":"richiesta profilglass","data":"","priorita":"Media","fatto":false},{"id":"n0006","azienda":"TELMA","testo":"richiamare","data":"","priorita":"Media","fatto":false}];
 const SHEET_ID   = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
 const WH_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/salva-cliente';
+const WH_NUOVO_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-cliente-inbox';
+const COLLEGHI_COMEFI = ['emanuela criscione','daria d'ettorre','daria dettorre','valentina clapasson','nicole casazza','valentina mammone','tamara borin','davide settanni','daniele settanni'];
+const DOMINI_GENERICI = ['gmail.com','yahoo.com','yahoo.it','hotmail.com','hotmail.it','libero.it','outlook.com','outlook.it','live.com','live.it','icloud.com','virgilio.it','tiscali.it','tin.it','fastwebnet.it','alice.it','pec.it'];
 const WH_VISITA  = 'https://danielesettanni.app.n8n.cloud/webhook/salva-visita';
 const WH_TASK    = 'https://danielesettanni.app.n8n.cloud/webhook/salva-task';
 const LISTA_NOMI = 'AA MODELLERIA SRL, ACMI SPA, ACT EUROPE SRL, ADI SPORT, ADM LASER, AE APPARECC. ELETT., AF AUTOMAZIONI, AGLA POWER TRASMISS, AGNELLA BIAGIO, AGRICOOLTUR, AIGLE MACCHINE, AIP PORTE, ALPA MECCANICA, ALUTRON, AM ATTREZZATURE MECCANICHE, AMBROSIO, AMERIO & C. SRL, AMP MECCANICA, AMPRIMO, AMR SRL, ANORS, ARMA SRL, ARME SRL, ARMENI E RAISE, ART-CAR, ARTIOLI PUBBLICITA\', ASSEL, AUNDE ITALIA, AUTOBLOK, AUTOMATION SERVICE TORINO, AVIP, BAGLIETTO, BALDO MODELLI, BASCO SRL, BATTAGLIOTTI, BBV GLASS, BCE, BELTECH, BERTAGLIA MODELLI, BERTINO VALENTINO, BIEMMEDUE SPA, BIG ONE, BISIACH & CARRU\', BITRON, BM CONCEPT, BONETTO CV, BONETTO SRL, BORDONE ALLESTIMENTI, BORNEGO E TRUCCO, BOSCO ITALIA, BRAMBATI SPA, BUSSI MARIO & C. SAS, C3 SRL, CAF, CAL-TECH, CAM SRL, CAMEL, CAMSS, CANGINI, CARPENTECNICA GROUP SRL, CARPENTERIA CARENA, CASAVECCHIA COSTR. MECC., CATTELINO GIOVANNI, CAYRE, CCM FINOTELLO, CEAN, CEDI, CENTINAL, CEPI RACK, CFGM, CHIALES TOOLS & PROJECT SRL, CIEMMEBI, CMA SRL, CMB INDUSTRIES SRL, CMF FORNASINO, CMM SRL, COL GIOVANNI PAOLO, COLD CAR, COLOMBINI, COMATIC, COMMERCIALE FOND, COMMERCIALE SIDERURGICA CUNEESE, CONTE SRL, COPRAUTO SRL, CORIMAMET, COTREL, COUNTRY LAB, COVI, CREDA ENTERPRISE, CSA, CSL INDUSTRIALE, CTS, CUSTOM 2,0, D ENGINEERING, DAME, DAMILANO GROUP, DANISI ENGINEERING, DE WAVE, DEMI SPA, DM MECCANICA, DM PACKAGING, DUTTO ILARIO, ECS, EKO SRL, ELECTRADUE, ELECTRO-PARTS SPA, ELSY, EMMEGI SCS, ERGOTECH, EURODIES, EUROMEC 2000, EUROSTAMP 1, F.LLI LATINI, F.LLI LUCCO-BORLERA, FIBET, FODISA, FONDERIA SAN FERMO, FRAMIC, FRANCHINO SRL, FRE&FREA, FRIMED, FTR, GAA, GAI MACCHINE SPA, GALEASSO, GALLETTO RADIATORI, GALOSSO GIOVANNI, GARIGLIO MECCANICA, GATTINO SRL, GB MECCANICA, GDR, GEOFER, GHISALBA, GIGLIO ATTREZ. E STAMPI, GINALCO, GIORDANO ALLESTIMENTI, GIORDANO LAMIERE, GIORIO, GIOVARA MECCANICA, GOLDEN CAR, GOMA ELETTRONICA, GP TECNICA, GRAZIADIO, GROB, GS & T, GS MERCALLESE, GUIDA, HANGAR, HB TECHNOLOGY, HBTS, HONESTAMP, HS SRL, ICOM, ILAS, ILMED, IMA TELEROBOT, IMPICCICHE AGOSTINO, INDUCTION, INOXTEK, INTERFIERE, IPAS SPA, IRONCUT SRL, ISCM, ITALPLANT, ITALPOOL, ITD, JORIO, K-TRONIC, LA TAVOLA, LABORMEC, LASERGATE, LASERLAM, LDA DESIGN, LISA INDUSTRIE, LISTELLO LUCA OFF. MECC., LITA, LIVE-TECH, LL DI LANOTTE, LL LAVORAZIONI LAMIERE, LMP2, LUCENOVA SRL, LUMALAB, LUMEC, LUMILIGHT, MABO SRL, MARIO PINTO SPA, MARZERO SAS, MAST MECCANICA, MCM DI MASERA, MCTECH, MDC DESIGN, MECCANIA, MECVIL, MERLO SRL, MET ACCIAI, MET ITALIA SRL, METAL CONTAINER, METALPLAST SOPRANA, METALTECNICA SRL, MF MELE, MGM ROBOTICS, MISA SNC, MIV INSULATING SYSTEMS SRL, MLLA, MODAR, MOVINTER, MTE, MTH, MULTITEL PAGLIERO, NABTESCO OCLAP, NANCHINO AUTOMAZ. IND., NC2 GRID, NG RUSCONI, NKE AUTOMATION, NOGI, NORD LEGNAMI GROUP SRL, NOVO, NUOVA ARMANDI, NUOVA BN, NUOVA SIMACH, NUOVA TECNO TAU, NUOVA TFM, OCF DI AGHEMO, OFFICINE ABRIOLA, OFFICINE BERTOLOTTI, OFFICINE GAUDINO, OLIVOTTO, OLL, OLMA, OLMEDO SPECIAL VEHICLES, OM PROJECT, OM3, OMAP, OMAR TECHNOLOGIES, OMAR VEICOLI INDUSTRIALI, OMAS, OMBI SRL, OMEK, OMER PRODUZIONE, OMG, OMG MANUFACTURING, OMLER 2000, OPAC MARE, OTS ASSEMBLY, P&P ITALIA, PALASER, PALUMBO LEGNAMI, PETRAMAR, PETRAMAR, PFM SPA, PIACENZA MECCANICA, PISCAZZI, PL&TL, PLAF, PODIUM, POGLIANO BUSBAR, PREMEC, PRINCIPI, PROIETTA, PROMOD, PROTOIN, PUSPACE, RACK PERUZZI, RG TECH, RGV, RIVESTAUTO, RPG, RSA AUTOMAZIONI, SACMI, SAFET, SAMEC, SAMSON GROUP, SANTIANO, SARVADON, SBF TECHNICAL SOLUTIONS S.R.L., SCAET, SCAM, SHANTI GSA, SIDER, SILATECH, SIMA DI NARDO STEFANO, SIMIC, SIMPRO, SIRN, SL BRANDIZZO, SMAT NORD, SMELL, SOLA NEON, SPARK, SPEA, STARK, STP SCALE, SYNTAX, TAURUS SAGES, TECNO EDM SRL, TECNO LAMIERA, TECNO TAU, TECNOFER, TECNOMEC, TEKFER, TEKNO ALFA, TELMA, TEMA, TERMOMACCHINE, TESIO COOLING, TLM, TLM, TONON, TOVO, TPF, TPRO, TRASPARENTE, TRELLEBORG, TS, TUXOR, UNICABLE, VIBEL, WINGECO, WOODEX, ZETA MECCANICA, FIDIA MACCHINE GRAFICHE SRL, VM SRL, F.S. MODELLI S.R.L., TEKNEL CONSULT SRL, DTE SRL, ONEDGE, RECARO - CASELETTE, RECARO - RIVOLI, PERANO SPA, VER-MEC, PROMEK ROBOTIC SOLUTION SRL, FERRARI & CARENA, STEAT SRL, SAMIND';
@@ -468,12 +471,16 @@ let clStato = 'Tutti', clView = 'list';
 let attTab  = 'todo';
 let mlTab   = 'all';
 
-if (clienti.length < 300) { clienti = JSON.parse(JSON.stringify(DD_C)); W('_clienti', clienti); }
+// DD_C usato solo come fallback iniziale se localStorage è vuoto
 
 /* ═══════════════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════════════ */
-const uid  = () => Math.random().toString(36).slice(2,9);
+const uid = () => {
+  const nums = clienti.map(c => { const m = (c.id||'').match(/^c(\d+)$/); return m ? parseInt(m[1]) : 0; });
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return 'c' + String(next).padStart(4, '0');
+};
 const ini  = s => (s||'?').split(/[\s|]+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const esc  = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const fd   = d => d ? new Date(d).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}) : '—';
@@ -706,7 +713,7 @@ function consMini(cons) {
 ═══════════════════════════════════════════════════ */
 async function syncSheets() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:Q`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:T`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const txt = await res.text();
@@ -745,10 +752,12 @@ async function syncSheets() {
         // Matching dominio CASE INSENSITIVE
         const da = (o.DA||'').toLowerCase();
         const domMatch = da.match(/@([a-z0-9._-]+)/);
-        if (domMatch && !o.CLIENTE_RICONOSCIUTO) {
+        if (domMatch && !o.CLIENTE_RICONOSCIUTO && !da.includes('comefimetalli.it')) {
           const dom = domMatch[1];
-          const found = clienti.find(c => c.dominio && c.dominio.toLowerCase() === dom);
-          if (found) o.CLIENTE_RICONOSCIUTO = found.azienda;
+          if (!DOMINI_GENERICI.includes(dom)) {
+            const found = clienti.find(c => c.dominio && c.dominio.toLowerCase() === dom);
+            if (found) o.CLIENTE_RICONOSCIUTO = found.azienda;
+          }
         }
         return o;
       });
@@ -914,7 +923,7 @@ async function saveCliente(id) {
   clienti = id ? clienti.map(x=>x.id===id?{...x,...c}:x) : [...clienti,c];
   W('_clienti',clienti);
   const _c=clienti.find(x=>x.id===c.id);
-  if(_c) await pushSheet(WH_CLIENTE, {..._c, _azione: id?'update':'insert'});
+  if(_c) await pushSheet(id ? WH_CLIENTE : WH_NUOVO_CLIENTE, {..._c, _azione: id?'update':'insert'});
   closeMo(); renderClienti();
 }
 
@@ -1383,12 +1392,17 @@ function normMail(m) {
   if(raw.includes('{')){try{const cl=raw.replace(/```json\s*/gi,'').replace(/```/g,'').trim();const mj=cl.match(/\{[\s\S]*\}/);if(mj)parsed=JSON.parse(mj[0]);}catch{}}
   const clienteNome = (!raw.includes('{')?raw:'')||parsed?.cliente_riconosciuto||'';
   const isNuovo = g(['CLIENTE_NUOVO','cliente_nuovo'])==='SI';
-  // Un cliente è "nuovo" solo se CLIENTE_NUOVO=SI E non è già nel CRM
-  const clienteNelCRM = clienteNome ? clienti.some(c =>
-    c.azienda.toLowerCase() === clienteNome.toLowerCase() ||
-    c.azienda.toLowerCase().includes(clienteNome.toLowerCase().split(' ')[0]) ||
-    clienteNome.toLowerCase().includes(c.azienda.toLowerCase().split(' ')[0])
-  ) : false;
+  const dominioMail = g(['DOMINIO_CLIENTE','dominio_cliente']) || '';
+  const clienteNelCRM = clienteNome ? clienti.some(c => {
+    const nomeC = c.azienda.toLowerCase();
+    const nomeM = clienteNome.toLowerCase();
+    if (nomeC === nomeM) return true;
+    if (dominioMail && c.dominio && c.dominio.toLowerCase().includes(dominioMail.toLowerCase())) return true;
+    const wordsC = nomeC.split(/\s+/).filter(w=>w.length>3);
+    const wordsM = nomeM.split(/\s+/).filter(w=>w.length>3);
+    const comuni = wordsC.filter(w=>wordsM.includes(w));
+    return comuni.length >= 2;
+  }) : false;
   // Una mail è "inbox" se:
   // 1. CLIENTE_NUOVO=SI da n8n E non è già nel CRM
   // 2. OPPURE cliente vuoto E mittente esterno E rilevante (mail vecchie pre-v3)
@@ -1422,12 +1436,12 @@ function normMail(m) {
     corpo:         g(['CORPO_BREVE','corpo_breve'])||parsed?.corpo_breve||'',
     cliente:       clienteNome,
     clienteNuovo:  isInbox,
-    referente:     g(['REFERENTE','referente'])||parsed?.referente||'',
+    referente:     (()=>{ const r=(g(['REFERENTE','referente'])||parsed?.referente||''); return COLLEGHI_COMEFI.includes(r.toLowerCase())?'':r; })(),
     referenteEmail:g(['REFERENTE_EMAIL','referente_email'])||'',
     referenteAzienda:g(['REFERENTE_AZIENDA','referente_azienda'])||'',
     pivaCliente:   g(['PIVA_CLIENTE','piva_cliente'])||'',
     cittaCliente:  g(['CITTA_CLIENTE','citta_cliente'])||'',
-    dominioCliente:g(['DOMINIO_CLIENTE','dominio_cliente'])||'',
+    dominioCliente:(()=>{ const d=(g(['DOMINIO_CLIENTE','dominio_cliente'])||'').toLowerCase(); return DOMINI_GENERICI.includes(d)?'':d; })(),
     materiali:     g(['MATERIALI','materiali'])||'',
     note_ai:       g(['NOTE_AI','note_ai'])||parsed?.note||'',
     rilevante:     g(['RILEVANTE_CRM','rilevante_crm'])==='SI'||parsed?.rilevante_crm===true,
@@ -1971,10 +1985,11 @@ function approvaClienteInbox(idx, nomeGuess, dom) {
   const prArr  = citta.match(/\(([A-Z]{2})\)/);
   const pr     = prArr ? prArr[1] : '';
   const cittaPulita = citta.replace(/\s*\([A-Z]{2}\)\s*/, '').trim();
-  const dominio = m.dominioCliente || dom;
+  const _dom = (m.dominioCliente || dom || '').toLowerCase();
+  const dominio = DOMINI_GENERICI.includes(_dom) ? '' : _dom;
   const mailRef = m.referenteEmail || m.da.replace(/<|>/g,'');
   const piva   = m.pivaCliente ? String(m.pivaCliente).replace('.0','') : '';
-  const referente = m.referente || '';
+  const referente = COLLEGHI_COMEFI.includes((m.referente||'').toLowerCase()) ? '' : (m.referente || '');
   const materiali = m.materiali || '';
 
   openMo(`<div class="mo-ttl">Nuovo cliente<button class="mo-x" onclick="closeMo()">✕</button></div>
