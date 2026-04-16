@@ -1781,7 +1781,7 @@ function mostraAI() {
   ].filter(Boolean).map(([k,v,c])=>`<div class="aif"><span class="aifk">${k}</span><span class="aifv"${c?' style="color:'+c+'"':''}>${esc(v)}</span></div>`).join('');
   document.getElementById('vaibox').style.display='block';
   document.getElementById('vacts').style.display='flex';
-  document.getElementById('vsave').disabled=!nome;
+  document.getElementById('vsave').disabled=false; // sempre abilitato, si può correggere nel modale
 }
 function resetMicBtn() {
   const btn=document.getElementById('vbtn');
