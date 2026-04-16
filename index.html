@@ -273,10 +273,10 @@ textarea.edit-field{resize:vertical;min-height:80px}
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
       <div><div class="ht">Registra Visita</div><div class="hs">// PARLA O SCRIVI → AI ANALIZZA → CRM AGGIORNA</div></div>
       <div style="display:flex;gap:6px">
-        <button class="btn-ic" onclick="goTo('report')" title="Report">
+        <button class="btn-ic" onclick="document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('s-report').classList.add('on');renderReport()" title="Report">
           <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </button>
-        <button class="btn-ic" onclick="goTo('settings')" title="Config">
+        <button class="btn-ic" onclick="document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('s-settings').classList.add('on');const el=document.getElementById('set-apikey');if(el)el.value=localStorage.getItem('_apikey')?'●●●●●●●●●●●●':''" title="Config">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
@@ -918,7 +918,7 @@ function renderClienti() {
         + '</div>'
         + radarClienti.map(c => {
             const col = colori[c._tipo];
-            return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(''+c.id+'')">'
+            return '<div class="card tap" style="background:'+col.bg+';border:1px solid '+col.border+'" onclick="openScheda(\"'+c.id+'\")">'
               + '<div class="row">'
               + '<div class="av" style="color:'+col.badge+'">' + ini(c.azienda) + '</div>'
               + '<div class="ri">'
