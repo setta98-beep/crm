@@ -314,7 +314,7 @@ textarea.edit-field{resize:vertical;min-height:80px}
       </div>
       <div class="vacts" id="vacts" style="display:none">
         <button class="btn btn-s" onclick="vReset()">↺ RIPROVA</button>
-        <button class="btn btn-p" id="vsave" onclick="vSalva()">✓ CONFERMA</button>
+        <button class="btn btn-p" id="vsave" onclick="vModifica()">✎ MODIFICA & SALVA</button>
       </div>
       <div id="vok" style="display:none;text-align:center">
         <div style="width:54px;height:54px;border-radius:50%;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--green)">
@@ -1787,6 +1787,97 @@ function resetMicBtn() {
   const btn=document.getElementById('vbtn');
   if(btn) btn.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 }
+function vModifica() {
+  if(!vAI) return;
+  const r = vAI;
+  const nome = r.cliente || r.nuovo_cliente?.nome || '';
+  const isNuovo = !r.cliente;
+  const tipoV = r.tipo==='telefonata'?'Telefonata':r.tipo==='email'?'Email':'Visita';
+  const TVISITA_OPT = ['Visita','Telefonata','Email','Appunti','Offerta inviata'].map(t=>`<option${t===tipoV?' selected':''}>${t}</option>`).join('');
+  const STATI_OPT = STATI.map(s=>`<option${s==='Prospect'?' selected':''}>${s}</option>`).join('');
+
+  openMo(`<div class="mo-ttl">Verifica e salva<button class="mo-x" onclick="closeMo()">✕</button></div>
+    ${isNuovo ? `
+    <div style="background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--amber);font-family:var(--fm)">⚡ CLIENTE NON RICONOSCIUTO — compila i dati per crearlo</div>
+    <div class="fg"><label class="fl">Nome azienda *</label><input class="fi" id="vm-az" value="${esc(nome)}" placeholder="Nome azienda"></div>
+    <div style="display:grid;grid-template-columns:1fr 70px;gap:8px">
+      <div class="fg"><label class="fl">Città</label><input class="fi" id="vm-ci" value="" placeholder="Città"></div>
+      <div class="fg"><label class="fl">Prov.</label><input class="fi" id="vm-pr" value="" maxlength="2"></div>
+    </div>
+    <div class="fg"><label class="fl">Stato</label><select class="fi" id="vm-st">${STATI_OPT}</select></div>
+    ` : `
+    <div style="background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);border-radius:9px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--cyan);font-family:var(--fm)">👤 ${esc(nome)}</div>
+    `}
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:10px 0"></div>
+    <div class="fg"><label class="fl">Tipo interazione</label><select class="fi" id="vm-tipo">${TVISITA_OPT}</select></div>
+    <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="vm-data" value="${r.data||oggi()}"></div>
+    <div class="fg"><label class="fl">Referente</label><input class="fi" id="vm-ref" value="${esc(r.referente||'')}" placeholder="Nome referente"></div>
+    <div class="fg"><label class="fl">Note *</label><textarea class="fi" id="vm-note" rows="4">${esc(r.note||'')}</textarea></div>
+    <div class="mo-acts">
+      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
+      <button class="btn btn-p" onclick="vSalvaModificato(${isNuovo})">✓ SALVA</button>
+    </div>`);
+}
+
+async function vSalvaModificato(isNuovo) {
+  if(!vAI) return;
+  const r = vAI;
+
+  // Leggi valori dal modale
+  const tipoSel = document.getElementById('vm-tipo')?.value || 'Visita';
+  const dataSel = document.getElementById('vm-data')?.value || oggi();
+  const refSel  = document.getElementById('vm-ref')?.value.trim() || '';
+  const noteSel = document.getElementById('vm-note')?.value.trim() || r.note || '';
+
+  let nome = r.cliente;
+
+  // Se cliente nuovo, crealo
+  if (isNuovo) {
+    const az = (document.getElementById('vm-az')?.value||'').trim().toUpperCase();
+    if (!az) { alert('Inserisci il nome azienda'); return; }
+    const nc = {
+      id: uid(), ag: 'DAN', azienda: az,
+      citta: document.getElementById('vm-ci')?.value.trim()||'',
+      pr: document.getElementById('vm-pr')?.value.trim().toUpperCase()||'',
+      indirizzo:'', cap:'', contatto: refSel, numero:'', mail:'', dominio:'', piva:'',
+      stato: document.getElementById('vm-st')?.value||'Prospect',
+      ultima_visita: dataSel, descrizione:'',
+      consumi:{barre:'',piastre:'',profili:'',lamiere:'',note_generali:''}
+    };
+    clienti = [...clienti, nc];
+    W('_clienti', clienti);
+    pushSheet(WH_NUOVO_CLIENTE, {...nc});
+    nome = az;
+  }
+
+  closeMo();
+
+  // Salva visita
+  if (noteSel && nome) {
+    const nv = {id:uid(), azienda:nome, data:dataSel, tipo:tipoSel, referente:refSel, note:noteSel};
+    visite = [nv, ...visite];
+    W('_visite', visite);
+    clienti = clienti.map(c=>c.azienda===nome?{...c,ultima_visita:dataSel}:c);
+    W('_clienti', clienti);
+    await pushSheet(WH_VISITA, nv);
+    const vcnt = document.getElementById('vi-cnt');
+    if(vcnt) vcnt.textContent = visite.length+' // REGISTRAZIONI';
+  }
+
+  // Salva task
+  if(r.attivita?.length) {
+    const na = r.attivita.map(a=>({id:uid(),azienda:nome||'',testo:a.testo,data:a.scadenza||'',priorita:a.priorita||'Media',fatto:false}));
+    note = [...na, ...note];
+    W('_note', note);
+    for(const n of na) await pushSheet(WH_TASK, n);
+  }
+
+  document.getElementById('vaibox').style.display='none';
+  document.getElementById('vacts').style.display='none';
+  document.getElementById('vok').style.display='block';
+  badges();
+}
+
 async function vSalva() {
   if(!vAI) return;
   const r=vAI; let nome=r.cliente;
