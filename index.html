@@ -264,22 +264,23 @@ textarea.edit-field{resize:vertical;min-height:80px}
       <span class="bn" id="bn-mail" style="display:none"></span>
     </span>Mail
   </button>
-  <button class="nb" data-s="report" onclick="go('report',this)">
-    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Report
-  </button>
-  <button class="nb" data-s="settings" onclick="go('settings',this)">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    Config
-  </button>
 </nav>
 
 <!-- VOCALE -->
 <div id="s-vocale" class="scr on">
   <div class="hdr">
     <div class="hl">JARVIS · COMEFI METALLI</div>
-    <div class="ht">Registra Visita</div>
-    <div class="hs">// PARLA O SCRIVI → AI ANALIZZA → CRM AGGIORNA</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div><div class="ht">Registra Visita</div><div class="hs">// PARLA O SCRIVI → AI ANALIZZA → CRM AGGIORNA</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn-ic" onclick="go('report',document.querySelector('[data-s=report]'))" title="Report">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button class="btn-ic" onclick="go('settings',document.querySelector('[data-s=settings]'))" title="Config">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
   <div class="scroll">
     <div class="vwrap">
@@ -2208,38 +2209,19 @@ async function elaboraBiglietto(event) {
       reader.readAsDataURL(file);
     });
 
-    const apiKey = getApiKey();
-    if (!apiKey) {
-      closeMo();
-      openMo('<div class="mo-ttl">API Key mancante<button class="mo-x" onclick="closeMo()">✕</button></div>'
-        + '<div style="padding:20px;font-size:13px;color:var(--amber)">Vai su CONFIG e inserisci la tua API key Anthropic per usare questa funzione.</div>'
-        + '<div class="mo-acts"><button class="btn btn-s" onclick="closeMo()">Chiudi</button></div>');
-      return;
-    }
-
-    // Chiama Claude API con vision
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    // Chiama n8n webhook (proxy per Claude vision)
+    const resp = await fetch('https://danielesettanni.app.n8n.cloud/webhook/scan-biglietto', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 } },
-            { type: 'text', text: 'Leggi questo biglietto da visita ed estrai i dati. Rispondi SOLO con JSON valido senza backtick:\n{"azienda":"","nome":"","ruolo":"","telefono":"","email":"","indirizzo":"","citta":"","pr":"","sito":"","piva":""}' }
-          ]
-        }]
+        image: base64,
+        mediaType: file.type || 'image/jpeg',
+        apiKey: getApiKey()
       })
     });
 
     const data = await resp.json();
-    const txt = data.content?.[0]?.text || '';
+    const txt = data.text || JSON.stringify(data);
     let info = {};
     try {
       const m = txt.match(/\{[\s\S]*\}/);
