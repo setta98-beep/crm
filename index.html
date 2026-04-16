@@ -863,21 +863,38 @@ function renderClienti() {
     // - ROSSO: entrambe
     const oggi_d = new Date();
 
+    // Pre-calcola mappe per performance
+    const mailPerCliente = {};
+    mailLog.forEach(m => {
+      const nm = normMail(m);
+      if (nm.cliente && nm.data) {
+        if (!mailPerCliente[nm.cliente] || nm.data > mailPerCliente[nm.cliente])
+          mailPerCliente[nm.cliente] = nm.data;
+      }
+    });
+    const visitePerCliente = {};
+    const visiteFisichePerCliente = {};
+    visite.forEach(v => {
+      if (!v.azienda || !v.data) return;
+      if (!visitePerCliente[v.azienda] || v.data > visitePerCliente[v.azienda])
+        visitePerCliente[v.azienda] = v.data;
+      if (['Visita','Telefonata'].includes(v.tipo)) {
+        if (!visiteFisichePerCliente[v.azienda] || v.data > visiteFisichePerCliente[v.azienda])
+          visiteFisichePerCliente[v.azienda] = v.data;
+      }
+    });
+
     const ultimaInterazione = c => {
-      // Prendi la data più recente tra visite e mail associate
-      const vDates = visite.filter(v => v.azienda === c.azienda).map(v => v.data).filter(Boolean);
-      const mDates = mailLog.map(m => {
-        const nm = normMail(m);
-        return nm.cliente === c.azienda ? nm.data : null;
-      }).filter(Boolean);
-      const all = [...vDates, ...mDates, c.ultima_visita||''].filter(Boolean).sort().reverse();
-      return all[0] || '';
+      const dates = [
+        c.ultima_visita||'',
+        visitePerCliente[c.azienda]||'',
+        mailPerCliente[c.azienda]||''
+      ].filter(Boolean).sort().reverse();
+      return dates[0] || '';
     };
 
     const ultimaVisitaFisica = c => {
-      const vFisiche = visite.filter(v => v.azienda === c.azienda && ['Visita','Telefonata'].includes(v.tipo));
-      if (!vFisiche.length) return c.ultima_visita || '';
-      return vFisiche.map(v => v.data).sort().reverse()[0];
+      return visiteFisichePerCliente[c.azienda] || c.ultima_visita || '';
     };
 
     const radarClienti = clienti
