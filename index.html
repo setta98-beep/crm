@@ -788,7 +788,7 @@ function consMini(cons) {
 ═══════════════════════════════════════════════════ */
 async function syncSheets() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:T`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:U`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const txt = await res.text();
@@ -1594,8 +1594,10 @@ function normMail(m) {
   // 2. OPPURE cliente vuoto E mittente esterno E rilevante (mail vecchie pre-v3)
   const da_val = g(['DA','da']);
   const mittenteEsterno = !da_val.toLowerCase().includes('comefimetalli.it');
+  const isNuovo_ref = g(['NUOVO_REFERENTE','nuovo_referente'])==='SI';
   const isInbox = (isNuovo && !clienteNelCRM) || 
-                  (!clienteNome && mittenteEsterno);
+                  (!clienteNome && mittenteEsterno) ||
+                  (isNuovo_ref && clienteNelCRM);
   return {
     data:          (()=>{
       const raw = g(['DATA','data'])||'';
@@ -1632,6 +1634,7 @@ function normMail(m) {
     note_ai:       g(['NOTE_AI','note_ai'])||parsed?.note||'',
     rilevante:     g(['RILEVANTE_CRM','rilevante_crm'])==='SI'||parsed?.rilevante_crm===true,
     salvato:       g(['SALVATO_CRM','salvato_crm'])==='SI',
+    nuovoReferente: g(['NUOVO_REFERENTE','nuovo_referente'])==='SI',
   };
 }
 function setMailTab(t,btn) {
@@ -1680,14 +1683,15 @@ function renderMail() {
               ${m.corpo?`<div style="font-size:12px;color:var(--ink2);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(m.corpo)}</div>`:''}
               <div style="background:var(--bg3);border-radius:9px;padding:10px;margin-bottom:10px;border:1px solid rgba(0,212,255,.1)">
                 <div style="font-size:10px;color:var(--cyan);font-family:var(--fm);margin-bottom:6px">JARVIS SUGGERISCE:</div>
-                <div style="font-size:12px;color:var(--ink)">Crea scheda <strong>${nomeGuess}</strong></div>
-                <div style="font-size:11px;color:var(--ink3);font-family:var(--fm)">Dominio: @${dom}</div>
+                ${m.nuovoReferente
+                  ? '<div style="font-size:12px;color:var(--ink)">Aggiungi referente <strong>'+esc(m.referente||m.referenteEmail||'')+'</strong> a <strong>'+esc(m.cliente||nomeGuess)+'</strong></div>'
+                  : '<div style="font-size:12px;color:var(--ink)">Crea scheda <strong>'+esc(nomeGuess)+'</strong></div><div style="font-size:11px;color:var(--ink3);font-family:var(--fm)">Dominio: @'+esc(dom)+'</div>'
+                }
               </div>
-              <div style="display:flex;gap:8px;margin-bottom:6px">
-                <button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox(${i},'${esc(nomeGuess)}','${esc(dom)}','cliente')">👤 CLIENTE</button>
-                <button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px;background:rgba(187,134,252,.15);border-color:var(--purple);color:var(--purple)" onclick="approvaClienteInbox(${i},'${esc(nomeGuess)}','${esc(dom)}','fornitore')">🏭 FORNITORE</button>
-              </div>
-              <button class="btn btn-s" style="width:100%;justify-content:center;font-size:12px" onclick="ignoraInbox(${i})">✕ IGNORA</button>
+              ${m.nuovoReferente
+                ? '<div style="display:flex;gap:8px"><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="aggiungiReferenteInbox('+i+')">👤 AGGIUNGI REFERENTE</button><button class="btn btn-s" style="flex:1;justify-content:center;font-size:12px" onclick="ignoraInbox('+i+')">✕ IGNORA</button></div>'
+                : '<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;cliente&apos;)">👤 CLIENTE</button><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px;background:rgba(187,134,252,.15);border-color:var(--purple);color:var(--purple)" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;fornitore&apos;)">🏭 FORNITORE</button></div><button class="btn btn-s" style="width:100%;justify-content:center;font-size:12px" onclick="ignoraInbox('+i+')">✕ IGNORA</button>'
+              }
             </div>`;
         }).join('');
     return;
@@ -2457,6 +2461,51 @@ function salvaDaBiglietto() {
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
+
+function aggiungiReferenteInbox(idx) {
+  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
+  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const m = inbox[idx]; if(!m) return;
+  const nomeRef = m.referente || '';
+  const emailRef = m.referenteEmail || '';
+  const cliente = clienti.find(c => c.azienda === m.cliente);
+  if (!cliente) return;
+
+  openMo('<div class="mo-ttl">Aggiungi referente<button class="mo-x" onclick="closeMo()">✕</button></div>'
+    + '<div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--cyan);font-family:var(--fm)">👤 Nuovo contatto per <strong>'+esc(cliente.azienda)+'</strong></div>'
+    + '<div class="fg"><label class="fl">Nome referente</label><input class="fi" id="nr-nome" value="'+esc(nomeRef)+'"></div>'
+    + '<div class="fg"><label class="fl">Email</label><input class="fi" id="nr-email" value="'+esc(emailRef)+'"></div>'
+    + '<div class="mo-acts">'
+    + '<button class="btn btn-s" onclick="closeMo()">Annulla</button>'
+    + '<button class="btn btn-p" onclick="salvaReferenteInbox(''+cliente.id+'','+idx+')">✓ AGGIUNGI</button>'
+    + '</div>');
+}
+
+async function salvaReferenteInbox(cid, idx) {
+  const nome = document.getElementById('nr-nome')?.value.trim()||'';
+  const email = document.getElementById('nr-email')?.value.trim()||'';
+  if (!nome && !email) return;
+  clienti = clienti.map(c => {
+    if (c.id !== cid) return c;
+    const contatti = c.contatto ? c.contatto + ' | ' + nome : nome;
+    const mails = c.mail ? c.mail + ' | ' + email : email;
+    return {...c, contatto: contatti.trim(), mail: mails.trim()};
+  });
+  W('_clienti', clienti);
+  const upd = clienti.find(c => c.id === cid);
+  if (upd) await pushSheet(WH_CLIENTE, {...upd, _azione: 'update'});
+  // Marca mail come salvata
+  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
+  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const m = inbox[idx];
+  if (m) mailLog = mailLog.map(raw => {
+    const n = normMail(raw);
+    if (n.da === m.da && n.oggetto === m.oggetto) return {...raw, SALVATO_CRM: 'SI'};
+    return raw;
+  });
+  W('_mail', mailLog);
+  closeMo(); badges(); renderMail();
+}
 
 function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
   const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
