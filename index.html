@@ -1595,9 +1595,12 @@ function normMail(m) {
   const da_val = g(['DA','da']);
   const mittenteEsterno = !da_val.toLowerCase().includes('comefimetalli.it');
   const isNuovo_ref = g(['NUOVO_REFERENTE','nuovo_referente'])==='SI';
-  const isInbox = (isNuovo && !clienteNelCRM) || 
-                  (!clienteNome && mittenteEsterno) ||
-                  (isNuovo_ref && clienteNelCRM);
+  const iaSalvato = g(['SALVATO_CRM','salvato_crm'])==='SI';
+  const isInbox = !iaSalvato && (
+    (isNuovo && !clienteNelCRM) || 
+    (!clienteNome && mittenteEsterno) ||
+    (isNuovo_ref && clienteNelCRM)
+  );
   return {
     data:          (()=>{
       const raw = g(['DATA','data'])||'';
@@ -1634,6 +1637,7 @@ function normMail(m) {
     note_ai:       g(['NOTE_AI','note_ai'])||parsed?.note||'',
     rilevante:     g(['RILEVANTE_CRM','rilevante_crm'])==='SI'||parsed?.rilevante_crm===true,
     salvato:       g(['SALVATO_CRM','salvato_crm'])==='SI',
+    _rowIdx:       raw['_ROW_IDX'] !== undefined ? raw['_ROW_IDX'] : null,
     nuovoReferente: g(['NUOVO_REFERENTE','nuovo_referente'])==='SI',
   };
 }
@@ -1662,7 +1666,7 @@ function renderMail() {
   });
 
   // INBOX DUBBI: mail con cliente non riconosciuto ma rilevante
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante && !m.salvato);
   const ti = document.getElementById('tab-inbox');
   if(ti) ti.textContent = inbox.length > 0 ? `INBOX (${inbox.length})` : 'INBOX';
 
@@ -2463,8 +2467,7 @@ function salvaDaBiglietto() {
 ═══════════════════════════════════════════════════ */
 
 function aggiungiReferenteInbox(idx) {
-  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const inbox = getInboxSorted();
   const m = inbox[idx]; if(!m) return;
   const nomeRef = m.referente || '';
   const emailRef = m.referenteEmail || '';
@@ -2500,14 +2503,10 @@ async function salvaReferenteInbox(cid, idx) {
   const upd = clienti.find(c => c.id === cid);
   if (upd) await pushSheet(WH_CLIENTE, {...upd, _azione: 'update'});
   // Marca mail come salvata
-  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const inbox = getInboxSorted();
   const m = inbox[idx];
   if (m) mailLog = mailLog.map(raw => {
-    const n = normMail(raw);
-    if (n.da === m.da && n.oggetto === m.oggetto) {
-      if (raw.SALVATO_CRM !== undefined) return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
-      if (raw.salvato_crm !== undefined) return {...raw, salvato_crm: 'SI', nuovo_referente: 'NO'};
+    if (m._rowIdx !== null && raw['_ROW_IDX'] === m._rowIdx) {
       return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
     }
     return raw;
@@ -2517,8 +2516,7 @@ async function salvaReferenteInbox(cid, idx) {
 }
 
 function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
-  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const inbox = getInboxSorted();
   const m = inbox[idx]; if(!m) return;
 
   const nomeAz = m.cliente || nomeGuess;
@@ -2558,8 +2556,7 @@ function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
 function confermaCreaCliente(idx, tipo='cliente') {
   const az = (document.getElementById('ni-az')?.value||'').trim().toUpperCase();
   if (!az) return;
-  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
+  const inbox = getInboxSorted();
   const m = inbox[idx];
 
   // Crea nuovo cliente
@@ -2609,16 +2606,24 @@ function confermaCreaCliente(idx, tipo='cliente') {
   }, 200);
 }
 
+function getInboxSorted() {
+  return mailLog.map(normMail)
+    .sort((a,b)=>{ 
+      if(a.ts&&b.ts)return b.ts-a.ts; 
+      const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);};
+      const ka=mkKey(a),kb=mkKey(b); 
+      if(ka!==kb)return kb.localeCompare(ka); 
+      return parseInt(b['_rowIdx']||0)-parseInt(a['_rowIdx']||0); 
+    })
+    .filter(m => m.clienteNuovo && m.rilevante && !m.salvato);
+}
+
 function ignoraInbox(idx) {
-  // Marca la mail come non rilevante nel mailLog locale
-  const norms = mailLog.map(normMail).sort((a,b)=>{ if(a.ts&&b.ts)return b.ts-a.ts; const mkKey=m=>{const d=(m.data||'').replace(/-/g,'');const t=(m.ora||'').replace(':','').padStart(4,'0');return d+(t==='0000'?'':t);}; const ka=mkKey(a),kb=mkKey(b); if(ka!==kb)return kb.localeCompare(ka); return parseInt(b['_ROW_IDX']||0)-parseInt(a['_ROW_IDX']||0); });
-  const inbox = norms.filter(m => m.clienteNuovo && m.rilevante);
-  const m = inbox[idx]; if(!m) return;
+  const norms = getInboxSorted();
+  const m = norms[idx]; if(!m) return;
   mailLog = mailLog.map(raw => {
-    const n = normMail(raw);
-    if (n.da === m.da && n.oggetto === m.oggetto) {
-      if (raw.RILEVANTE_CRM !== undefined) return {...raw, RILEVANTE_CRM: 'NO'};
-      return {...raw, rilevante_crm: false};
+    if (m._rowIdx !== null && raw['_ROW_IDX'] === m._rowIdx) {
+      return {...raw, SALVATO_CRM: 'SI', RILEVANTE_CRM: 'NO'};
     }
     return raw;
   });
