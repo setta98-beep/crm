@@ -2616,7 +2616,7 @@ function ignoraInbox(idx) {
   const m = inbox[idx]; if(!m) return;
   mailLog = mailLog.map(raw => {
     const n = normMail(raw);
-    if (n.da === m.da && n.oggetto === m.oggetto && !n.cliente) {
+    if (n.da === m.da && n.oggetto === m.oggetto) {
       if (raw.RILEVANTE_CRM !== undefined) return {...raw, RILEVANTE_CRM: 'NO'};
       return {...raw, rilevante_crm: false};
     }
