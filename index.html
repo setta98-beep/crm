@@ -2487,9 +2487,14 @@ async function salvaReferenteInbox(cid, idx) {
   if (!nome && !email) return;
   clienti = clienti.map(c => {
     if (c.id !== cid) return c;
-    const contatti = c.contatto ? c.contatto + ' | ' + nome : nome;
-    const mails = c.mail ? c.mail + ' | ' + email : email;
-    return {...c, contatto: contatti.trim(), mail: mails.trim()};
+    // Controlla duplicati prima di aggiungere
+    const contList = (c.contatto||'').split(' | ').map(x=>x.trim().toLowerCase());
+    const mailList = (c.mail||'').split(' | ').map(x=>x.trim().toLowerCase());
+    const nomeGiaPresente = nome && contList.includes(nome.toLowerCase());
+    const emailGiaPresente = email && mailList.includes(email.toLowerCase());
+    const contatti = (!nomeGiaPresente && nome) ? (c.contatto ? c.contatto + ' | ' + nome : nome) : c.contatto;
+    const mails = (!emailGiaPresente && email) ? (c.mail ? c.mail + ' | ' + email : email) : c.mail;
+    return {...c, contatto: (contatti||'').trim(), mail: (mails||'').trim()};
   });
   W('_clienti', clienti);
   const upd = clienti.find(c => c.id === cid);
@@ -2500,7 +2505,11 @@ async function salvaReferenteInbox(cid, idx) {
   const m = inbox[idx];
   if (m) mailLog = mailLog.map(raw => {
     const n = normMail(raw);
-    if (n.da === m.da && n.oggetto === m.oggetto) return {...raw, SALVATO_CRM: 'SI'};
+    if (n.da === m.da && n.oggetto === m.oggetto) {
+      if (raw.SALVATO_CRM !== undefined) return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
+      if (raw.salvato_crm !== undefined) return {...raw, salvato_crm: 'SI', nuovo_referente: 'NO'};
+      return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
+    }
     return raw;
   });
   W('_mail', mailLog);
