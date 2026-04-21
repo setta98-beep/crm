@@ -2658,7 +2658,7 @@ async function aggiornaMailStatus(mailId, salvato='SI', rilevante='SI', nuovoRef
 
 async function ignoraInbox(idx) {
   const norms = getInboxSorted();
-  console.log('ignoraInbox idx:', idx, 'norms.length:', norms.length, 'mail:', norms[idx]?.id, norms[idx]?.oggetto);
+  console.log('ignoraInbox idx:', idx, 'norms.length:', norms.length, 'id:', JSON.stringify(norms[idx]?.id), 'oggetto:', norms[idx]?.oggetto, 'rowIdx:', norms[idx]?._rowIdx); console.log('raw keys:', Object.keys(mailLog[0]||{}).slice(0,5));
   const m = norms[idx]; if(!m) { console.warn('mail non trovata per idx', idx); return; }
   await aggiornaMailStatus(m.id, 'SI', 'NO', 'NO');
   renderMail();
