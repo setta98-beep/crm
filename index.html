@@ -1596,7 +1596,9 @@ function normMail(m) {
   const mittenteEsterno = !da_val.toLowerCase().includes('comefimetalli.it');
   const isNuovo_ref = g(['NUOVO_REFERENTE','nuovo_referente'])==='SI';
   const iaSalvato = g(['SALVATO_CRM','salvato_crm'])==='SI';
-  const isInbox = !iaSalvato && (
+  const domCliente = g(['DOMINIO_CLIENTE','dominio_cliente'])||'';
+  const dominioInterno = domCliente.toLowerCase().includes('comefimetalli');
+  const isInbox = !iaSalvato && !dominioInterno && (
     (isNuovo && !clienteNelCRM) || 
     (!clienteNome && mittenteEsterno) ||
     (isNuovo_ref && clienteNelCRM)
@@ -2471,16 +2473,24 @@ function aggiungiReferenteInbox(idx) {
   const m = inbox[idx]; if(!m) return;
   const nomeRef = m.referente || '';
   const emailRef = m.referenteEmail || '';
-  const cliente = clienti.find(c => c.azienda === m.cliente);
-  if (!cliente) return;
+  // Match esatto o parziale sul nome cliente
+  let cliente = clienti.find(c => c.azienda === m.cliente);
+  if (!cliente && m.cliente) {
+    const ml = m.cliente.toLowerCase();
+    cliente = clienti.find(c => c.azienda.toLowerCase().includes(ml) || ml.includes(c.azienda.toLowerCase()));
+  }
+  // Se ancora non trovato, mostra comunque il modale con selezione manuale
+  const cid = cliente ? cliente.id : '';
+  const cnome = cliente ? cliente.azienda : (m.cliente || '?');
 
   openMo('<div class="mo-ttl">Aggiungi referente<button class="mo-x" onclick="closeMo()">✕</button></div>'
-    + '<div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--cyan);font-family:var(--fm)">👤 Nuovo contatto per <strong>'+esc(cliente.azienda)+'</strong></div>'
+    + '<div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:9px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--cyan);font-family:var(--fm)">👤 Nuovo contatto per <strong>'+esc(cnome)+'</strong></div>'
+    + (cid ? '' : '<div style="font-size:11px;color:var(--amber);font-family:var(--fm);margin-bottom:10px">⚠ Cliente non trovato nel CRM — seleziona manualmente</div><div class="fg"><label class="fl">Azienda</label><input class="fi" id="nr-az" list="nr-az-list" placeholder="Cerca azienda..."><datalist id="nr-az-list">'+clienti.map(c=>'<option value="'+esc(c.azienda)+'">').join('')+'</datalist></div>')
     + '<div class="fg"><label class="fl">Nome referente</label><input class="fi" id="nr-nome" value="'+esc(nomeRef)+'"></div>'
     + '<div class="fg"><label class="fl">Email</label><input class="fi" id="nr-email" value="'+esc(emailRef)+'"></div>'
     + '<div class="mo-acts">'
     + '<button class="btn btn-s" onclick="closeMo()">Annulla</button>'
-    + '<button class="btn btn-p" onclick="salvaReferenteInbox(&quot;'+cliente.id+'&quot;,'+idx+')">✓ AGGIUNGI</button>'
+    + '<button class="btn btn-p" onclick="salvaReferenteInbox(&quot;'+cid+'&quot;,'+idx+')">✓ AGGIUNGI</button>'
     + '</div>');
 }
 
@@ -2488,6 +2498,13 @@ async function salvaReferenteInbox(cid, idx) {
   const nome = document.getElementById('nr-nome')?.value.trim()||'';
   const email = document.getElementById('nr-email')?.value.trim()||'';
   if (!nome && !email) return;
+  // Se cid non passato, cerca per azienda dal campo manuale
+  if (!cid) {
+    const az = document.getElementById('nr-az')?.value.trim();
+    const c = clienti.find(x => x.azienda === az);
+    if (c) cid = c.id;
+  }
+  if (!cid) { alert('Seleziona un\'azienda valida'); return; }
   clienti = clienti.map(c => {
     if (c.id !== cid) return c;
     // Controlla duplicati prima di aggiungere
@@ -2505,12 +2522,19 @@ async function salvaReferenteInbox(cid, idx) {
   // Marca mail come salvata
   const inbox = getInboxSorted();
   const m = inbox[idx];
-  if (m) mailLog = mailLog.map(raw => {
-    if (m._rowIdx !== null && raw['_ROW_IDX'] === m._rowIdx) {
-      return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
-    }
-    return raw;
-  });
+  if (m) {
+    mailLog = mailLog.map(raw => {
+      if (m._rowIdx !== null && m._rowIdx !== undefined && raw['_ROW_IDX'] === m._rowIdx) {
+        return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
+      }
+      // Fallback: match per da+oggetto
+      const n = normMail(raw);
+      if (n.da === m.da && n.oggetto === m.oggetto) {
+        return {...raw, SALVATO_CRM: 'SI', NUOVO_REFERENTE: 'NO'};
+      }
+      return raw;
+    });
+  }
   W('_mail', mailLog);
   closeMo(); badges(); renderMail();
 }
