@@ -791,7 +791,7 @@ function consMini(cons) {
 ═══════════════════════════════════════════════════ */
 async function syncSheets() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=B:U`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=A:U`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const txt = await res.text();
