@@ -2528,7 +2528,7 @@ async function salvaReferenteInbox(cid, idx) {
   // Marca mail come salvata
   const inbox = getInboxSorted();
   const m = inbox[idx];
-  if (m) await aggiornaMailStatus(m.id, 'SI', 'SI', 'NO');
+  if (m) await aggiornaMailStatus(m, 'SI', 'SI', 'NO');
   W('_mail', mailLog);
   closeMo(); badges(); renderMail();
 }
@@ -2636,31 +2636,33 @@ function getInboxSorted() {
     .filter(m => m.clienteNuovo && m.rilevante && !m.salvato);
 }
 
-async function aggiornaMailStatus(mailId, salvato='SI', rilevante='SI', nuovoRef='NO') {
-  if (!mailId) return;
+async function aggiornaMailStatus(m, salvato='SI', rilevante='SI', nuovoRef='NO') {
+  if (!m) return;
+  const chiaveDa = m.da || '';
+  const chiaveOggetto = m.oggetto || '';
   // Aggiorna locale
-  _inboxIgnorati.add(mailId); salvaIgnorati();
   mailLog = mailLog.map(raw => {
-    const rid = (raw['ID']||raw['id']||'');
-    if (rid === mailId) return {...raw, SALVATO_CRM: salvato, RILEVANTE_CRM: rilevante, NUOVO_REFERENTE: nuovoRef};
+    const n = normMail(raw);
+    if (n.da === chiaveDa && n.oggetto === chiaveOggetto)
+      return {...raw, SALVATO_CRM: salvato, RILEVANTE_CRM: rilevante, NUOVO_REFERENTE: nuovoRef};
     return raw;
   });
   W('_mail', mailLog);
-  // Aggiorna Google Sheet via n8n (fire and forget)
+  // Aggiorna Google Sheet via n8n
   try {
     await fetch(WH_MAIL_STATUS, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id: mailId, salvato_crm: salvato, rilevante_crm: rilevante, nuovo_referente: nuovoRef})
+      body: JSON.stringify({da: chiaveDa, oggetto: chiaveOggetto, salvato_crm: salvato, rilevante_crm: rilevante, nuovo_referente: nuovoRef})
     });
   } catch(e) { console.warn('Mail status sync failed:', e.message); }
 }
 
 async function ignoraInbox(idx) {
   const norms = getInboxSorted();
-  console.log('ignoraInbox idx:', idx, 'norms.length:', norms.length, 'id:', JSON.stringify(norms[idx]?.id), 'oggetto:', norms[idx]?.oggetto, 'rowIdx:', norms[idx]?._rowIdx); console.log('raw keys:', Object.keys(mailLog[0]||{}).slice(0,5));
-  const m = norms[idx]; if(!m) { console.warn('mail non trovata per idx', idx); return; }
-  await aggiornaMailStatus(m.id, 'SI', 'NO', 'NO');
+  
+  const m = norms[idx]; if(!m) { return; }
+  await aggiornaMailStatus(m, 'SI', 'NO', 'NO');
   renderMail();
 }
 
