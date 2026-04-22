@@ -504,6 +504,12 @@ let clStato = 'Tutti', clView = 'list';
 let radarFiltro = null;
 let _inboxIgnorati = new Set(JSON.parse(localStorage.getItem('_inboxIgnorati')||'[]'));
 function salvaIgnorati() { localStorage.setItem('_inboxIgnorati', JSON.stringify([..._inboxIgnorati])); }
+function chiaveMail(m) {
+  // Chiave univoca per una mail: data+oggetto (normalizzato)
+  const data = (m.data||m['DATA']||m['data']||'').toString().split('T')[0].split(' ')[0];
+  const ogg = (m.oggetto||m['OGGETTO']||m['oggetto']||'').toString().trim().toLowerCase().slice(0,60);
+  return data + '|' + ogg;
+}
 let attTab  = 'todo';
 let mlTab   = 'all';
 
@@ -839,7 +845,14 @@ async function syncSheets() {
         }
         return o;
       });
-    mailLog = nuovi;
+    // Applica override locali (_inboxIgnorati) sui dati freschi del Sheet
+    mailLog = nuovi.map(raw => {
+      const mailId = (raw['ID']||raw['id']||'').toString();
+      const ck = chiaveMail(raw);
+      if ((mailId && _inboxIgnorati.has(mailId)) || _inboxIgnorati.has(ck))
+        return {...raw, SALVATO_CRM: 'SI'};
+      return raw;
+    });
     W('_mail', mailLog);
     renderMail();
     badges();
@@ -1605,7 +1618,8 @@ function normMail(m) {
   const isNuovo_ref = g(['NUOVO_REFERENTE','nuovo_referente'])==='SI';
   const iaSalvato = g(['SALVATO_CRM','salvato_crm'])==='SI';
   const mailId = g(['ID','id'])||'';
-  const isIgnoratoLocale = mailId ? _inboxIgnorati.has(mailId) : false;
+  const _chiave = (()=>{ const d=(g(['DATA','data'])||'').split('T')[0].split(' ')[0]; const o=(g(['OGGETTO','oggetto'])||'').trim().toLowerCase().slice(0,60); return d+'|'+o; })();
+  const isIgnoratoLocale = _inboxIgnorati.has(mailId) || _inboxIgnorati.has(_chiave);
   const domCliente = g(['DOMINIO_CLIENTE','dominio_cliente'])||'';
   const dominioInterno = domCliente.toLowerCase().includes('comefimetalli');
   const isInbox = !iaSalvato && !isIgnoratoLocale && !dominioInterno && (
@@ -1640,7 +1654,7 @@ function normMail(m) {
     cliente:       clienteNome,
     clienteNuovo:  isInbox,
     referente:     (()=>{ const r=(g(['REFERENTE','referente'])||parsed?.referente||''); return COLLEGHI_COMEFI.includes(r.toLowerCase())?'':r; })(),
-    referenteEmail:g(['REFERENTE_EMAIL','referente_email'])||'',
+    referenteEmail:(()=>{ const e=g(['REFERENTE_EMAIL','referente_email'])||''; return e.toLowerCase().includes('comefimetalli')?'':e; })(),
     referenteAzienda:g(['REFERENTE_AZIENDA','referente_azienda'])||'',
     pivaCliente:   g(['PIVA_CLIENTE','piva_cliente'])||'',
     cittaCliente:  g(['CITTA_CLIENTE','citta_cliente'])||'',
@@ -2643,22 +2657,40 @@ function getInboxSorted() {
 
 async function aggiornaMailStatus(m, salvato='SI', rilevante='SI', nuovoRef='NO') {
   if (!m) return;
+  const rowIdx = m._rowIdx;
   const chiaveDa = m.da || '';
   const chiaveOggetto = m.oggetto || '';
-  // Aggiorna locale
+  const chiaveData = m.data || '';
+  // Salva chiave negli ignorati locali
+  const _ck = chiaveData + '|' + chiaveOggetto.trim().toLowerCase().slice(0,60);
+  _inboxIgnorati.add(_ck);
+  salvaIgnorati();
+  // Aggiorna locale usando _rowIdx (più affidabile)
   mailLog = mailLog.map(raw => {
-    const n = normMail(raw);
-    if (n.da === chiaveDa && n.oggetto === chiaveOggetto)
+    if (rowIdx !== null && rowIdx !== undefined && raw['_ROW_IDX'] === rowIdx)
+      return {...raw, SALVATO_CRM: salvato, RILEVANTE_CRM: rilevante, NUOVO_REFERENTE: nuovoRef};
+    // Fallback: match per da+oggetto+data sui raw originali
+    const rawDa = (raw['DA']||raw['da']||'').toString();
+    const rawOgg = (raw['OGGETTO']||raw['oggetto']||'').toString();
+    const rawData = (raw['DATA']||raw['data']||'').toString().split(' ')[0].split('T')[0];
+    if (rawData === chiaveData && rawOgg === chiaveOggetto && rawDa.includes(chiaveDa.replace(/[<>]/g,'')))
       return {...raw, SALVATO_CRM: salvato, RILEVANTE_CRM: rilevante, NUOVO_REFERENTE: nuovoRef};
     return raw;
   });
   W('_mail', mailLog);
-  // Aggiorna Google Sheet via n8n
+  // Aggiorna Google Sheet via n8n usando data+da+oggetto come chiave
   try {
     await fetch(WH_MAIL_STATUS, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({da: chiaveDa, oggetto: chiaveOggetto, salvato_crm: salvato, rilevante_crm: rilevante, nuovo_referente: nuovoRef})
+      body: JSON.stringify({
+        data: chiaveData,
+        da: chiaveDa,
+        oggetto: chiaveOggetto,
+        salvato_crm: salvato,
+        rilevante_crm: rilevante,
+        nuovo_referente: nuovoRef
+      })
     });
   } catch(e) { console.warn('Mail status sync failed:', e.message); }
 }
