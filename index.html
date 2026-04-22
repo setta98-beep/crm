@@ -2221,7 +2221,7 @@ function renderMailCliente(mails, cid) {
       </div>
       ${m.oggetto?`<div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:3px">${esc(m.oggetto)}</div>`:''}
       ${m.corpo?`<div class="inter-note">${esc(m.corpo.slice(0,200))}${m.corpo.length>200?'…':''}</div>`:''}
-      ${m.referente?`<div class="inter-meta">Da: ${esc(m.referente)}</div>`:''}
+      ${m.referente?`<div class="inter-meta">${m.tipo==='OUT'?'A:':'Da:'} ${esc(m.referente)}</div>`:''}
       ${m.note_ai?`<div style="margin-top:6px;padding:6px 8px;background:rgba(0,212,255,.05);border-radius:7px;font-size:10.5px;color:var(--ink3);font-family:var(--fm)">${esc(m.note_ai)}</div>`:''}
     </div>`).join('');
 }
