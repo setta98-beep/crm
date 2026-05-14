@@ -588,7 +588,7 @@ textarea.edit-field{resize:vertical;min-height:80px}
 </div>
 
 <!-- MODAL -->
-<div class="mo-ov" id="mo-ov" style="display:none" onclick="if(event.target===this)closeMo()">
+<div class="mo-ov" id="mo-ov" style="display:none">
   <div class="mo" id="mo-body"></div>
 </div>
 
@@ -893,6 +893,19 @@ function go(id, btn) {
 ═══════════════════════════════════════════════════ */
 function openMo(html) { document.getElementById('mo-body').innerHTML=html; document.getElementById('mo-ov').style.display='flex'; }
 function closeMo() { document.getElementById('mo-ov').style.display='none'; }
+// Chiudi overlay solo se il mousedown è iniziato sull'overlay (non trascinando da dentro)
+(function(){
+  var _mdOnOverlay = false;
+  document.addEventListener('mousedown', function(e) {
+    var ov = document.getElementById('mo-ov');
+    _mdOnOverlay = (ov && ov.style.display !== 'none' && e.target === ov);
+  });
+  document.addEventListener('mouseup', function(e) {
+    var ov = document.getElementById('mo-ov');
+    if (_mdOnOverlay && ov && ov.style.display !== 'none' && e.target === ov) closeMo();
+    _mdOnOverlay = false;
+  });
+}());
 
 /* ═══════════════════════════════════════════════════
    BADGES
