@@ -408,9 +408,6 @@ textarea.edit-field{resize:vertical;min-height:80px}
         <button class="btn-ic" onclick="document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('s-report').classList.add('on');renderReport()" title="Report">
           <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </button>
-        <button class="btn-ic" id="sync-all-btn" onclick="syncTutto()" title="Sincronizza tutto">
-          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        </button>
 
       </div>
     </div>
@@ -2696,7 +2693,8 @@ function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
   const cittaPulita = citta.replace(/\s*\([A-Z]{2}\)\s*/, '').trim();
   const _dom = (m.dominioCliente || dom || '').toLowerCase();
   const dominio = DOMINI_GENERICI.includes(_dom) ? '' : _dom;
-  const mailRef = m.referenteEmail || m.da.replace(/<|>/g,'');
+  const _daClean = m.da.replace(/<|>/g,'');
+  const mailRef = m.referenteEmail || (_daClean.toLowerCase().includes('comefimetalli') ? '' : _daClean);
   const piva   = m.pivaCliente ? String(m.pivaCliente).replace('.0','') : '';
   const referente = COLLEGHI_COMEFI.includes((m.referente||'').toLowerCase()) ? '' : (m.referente || '');
   const materiali = m.materiali || '';
@@ -2844,16 +2842,6 @@ syncClienti();
 syncSheets();
 setInterval(syncSheets, 3*60*1000);
 setInterval(flushQueue, 30*1000);
-
-async function syncTutto() {
-  const btn = document.getElementById('sync-all-btn');
-  if (btn) btn.innerHTML = '<div class="spin" style="border-color:rgba(0,212,255,.2);border-top-color:var(--cyan)"></div>';
-  try {
-    await Promise.all([syncClienti(), syncVisite(), syncTask(), syncSheets()]);
-    renderClienti(); renderVisite(); renderAtt(); renderMail(); badges();
-  } catch(e) { console.warn('Sync error:', e); }
-  if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
-}
 
 async function syncManuale() {
   const btn = document.getElementById('sync-btn');
