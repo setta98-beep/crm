@@ -808,10 +808,14 @@ async function syncVisite() {
   renderVisite();
   const rows = await syncFromSheet('VISITE');
   if (!rows) return;
-  visite = rows.map(r => ({
+  const daSheet = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', data: r.DATA||'',
     tipo: r.TIPO||'Visita', referente: r.REFERENTE||'', note: r.NOTE||''
   })).filter(v => v.azienda);
+  const sheetIds = new Set(daSheet.map(v => v.id));
+  // Mantieni visite locali che non sono ancora sullo sheet (ID non presente)
+  const soloLocali = visite.filter(v => v.id && !sheetIds.has(v.id));
+  visite = [...daSheet, ...soloLocali];
   LW('_visite', visite);
   renderVisite();
 }
@@ -820,11 +824,15 @@ async function syncTask() {
   renderAtt();
   const rows = await syncFromSheet('TASK');
   if (!rows) return;
-  note = rows.map(r => ({
+  const daSheet = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', testo: r.TESTO||'',
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
     fatto: r.FATTO === 'SI'
   })).filter(n => n.testo);
+  const sheetIds = new Set(daSheet.map(n => n.id));
+  // Mantieni task locali non ancora sullo sheet
+  const soloLocali = note.filter(n => n.id && !sheetIds.has(n.id));
+  note = [...daSheet, ...soloLocali];
   LW('_note', note);
   renderAtt();
   badges();
