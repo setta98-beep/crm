@@ -553,6 +553,7 @@ textarea.edit-field{resize:vertical;min-height:80px}
       <button class="tab" onclick="setMailTab('in',this)">IN</button>
       <button class="tab" onclick="setMailTab('out',this)">OUT</button>
       <button class="tab" id="tab-inbox" onclick="setMailTab('inbox',this)">INBOX</button>
+      <button class="tab" id="tab-rdo" onclick="setMailTab('rdo',this)">RDO</button>
     </div>
     <div id="ml-list"></div>
   </div>
@@ -603,6 +604,7 @@ const DD_N = [{"id":"n0001","azienda":"MECCANIA","testo":"PASSARE A TROVARE","da
 const SHEET_ID   = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
 const getApiKey = () => S('_apikey') || '';
 const WH_MAIL_STATUS = 'https://danielesettanni.app.n8n.cloud/webhook/aggiorna-mail-status';
+const WH_RDO_CHIUDI = 'https://danielesettanni.app.n8n.cloud/webhook/rdo-chiudi';
 const WH_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/salva-cliente';
 const WH_NUOVO_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-cliente-inbox';
 const WH_NUOVO_FORNITORE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-fornitore-inbox';
@@ -949,6 +951,43 @@ function consMini(cons) {
 /* ═══════════════════════════════════════════════════
    SHEETS SYNC
 ═══════════════════════════════════════════════════ */
+async function syncRdoChiuse() {
+  try {
+    const SHEET_ID = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=RDO_CHIUSE`;
+    const r = await fetch(url); const txt = await r.text();
+    const json = JSON.parse(txt.replace(/^[^(]+\(/, '').replace(/\);?\s*$/, ''));
+    const rows = json.table?.rows || [];
+    const chiuse = rows.map(row => {
+      const cliente = row.c?.[0]?.v || '';
+      const data    = row.c?.[1]?.v || '';
+      return cliente + '|' + data;
+    }).filter(k => k !== '|');
+    // Merge con localStorage (tiene anche chiusure offline non ancora sincronizzate)
+    const locali = S('_rdo_chiuse') || [];
+    const merged = [...new Set([...chiuse, ...locali])];
+    W('_rdo_chiuse', merged);
+  } catch(e) { console.warn('syncRdoChiuse:', e.message); }
+}
+
+async function syncRdoChiuse() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=RDO_CHIUSE`;
+    const r = await fetch(url); const txt = await r.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return;
+    const data = JSON.parse(match[1]);
+    const rows = data.table?.rows || [];
+    const chiuse = rows.map(row => {
+      const cliente = row.c?.[0]?.v || '';
+      const dataRdo = row.c?.[1]?.v || '';
+      return cliente + '|' + dataRdo;
+    }).filter(k => k.length > 1);
+    const locali = S('_rdo_chiuse') || [];
+    W('_rdo_chiuse', [...new Set([...chiuse, ...locali])]);
+  } catch(e) { console.warn('syncRdoChiuse:', e.message); }
+}
+
 async function syncSheets() {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=MAIL_LOG&headers=1&range=A:U`;
@@ -1853,6 +1892,119 @@ function normMail(m) {
     nuovoReferente: g(['NUOVO_REFERENTE','nuovo_referente'])==='SI',
   };
 }
+
+// ── RICHIESTE D'OFFERTA APERTE ───────────────────────────────────────────────
+const RDO_APRI = ['richiesta', 'rdo', 'rof', 'offerta', 'disponib', 'quotazion', 'preventiv'];
+const RDO_CHIUDI = ['preventivo comefi', 'offerta comefi', 'non disponib', 'non disp', 'declino', 'declina', 'materiale non'];
+
+function isRdoApertura(m) {
+  if (m.tipo !== 'IN') return false;
+  const ogg = (m.oggetto||'').toLowerCase();
+  // Esclude mail di sistema/interne
+  if (!m.cliente) return false;
+  return RDO_APRI.some(k => ogg.includes(k));
+}
+
+function isRdoChiusura(m, cliente) {
+  if (m.tipo !== 'OUT') return false;
+  if ((m.cliente||'').toLowerCase() !== (cliente||'').toLowerCase()) return false;
+  const ogg = (m.oggetto||'').toLowerCase();
+  return RDO_CHIUDI.some(k => ogg.includes(k));
+}
+
+function getRdoAperte() {
+  const norms = mailLog.map(normMail).sort((a,b) => {
+    const ka = (a.data||'').replace(/-/g,'') + (a.ora||'').replace(':','').padStart(4,'0');
+    const kb = (b.data||'').replace(/-/g,'') + (b.ora||'').replace(':','').padStart(4,'0');
+    return ka.localeCompare(kb); // crescente: vecchie prima
+  });
+
+  // Raggruppa per cliente
+  const perCliente = {};
+  norms.forEach(m => {
+    const c = (m.cliente||'').trim();
+    if (!c) return;
+    if (!perCliente[c]) perCliente[c] = [];
+    perCliente[c].push(m);
+  });
+
+  const rdoAperte = [];
+
+  Object.entries(perCliente).forEach(([cliente, mails]) => {
+    // Scorri in ordine cronologico
+    let rdoCorrente = null;
+    mails.forEach(m => {
+      if (isRdoApertura(m)) {
+        // Apre una nuova RDO solo se non ce n'è già una aperta per questo cliente
+        if (!rdoCorrente) {
+          rdoCorrente = { cliente, oggetto: m.oggetto, data: m.data, da: m.da };
+        }
+      } else if (rdoCorrente && isRdoChiusura(m, cliente)) {
+        // Chiude la RDO aperta
+        rdoCorrente = null;
+      }
+    });
+    if (rdoCorrente) rdoAperte.push(rdoCorrente);
+  });
+
+  // Filtra quelle chiuse manualmente
+  const rdoChiuse = S('_rdo_chiuse') || [];
+  const rdoFiltrate = rdoAperte.filter(r => !rdoChiuse.includes(r.cliente + '|' + r.data));
+  // Ordina per data crescente (più vecchie prima = più urgenti)
+  rdoFiltrate.sort((a,b) => (a.data||'').localeCompare(b.data||''));
+  return rdoFiltrate;
+}
+
+async function chiudiRdoManuale(cliente, data) {
+  const rdoChiuse = S('_rdo_chiuse') || [];
+  const key = cliente + '|' + data;
+  if (!rdoChiuse.includes(key)) rdoChiuse.push(key);
+  W('_rdo_chiuse', rdoChiuse);
+  renderMail();
+  try {
+    await fetch(WH_RDO_CHIUDI, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ cliente, data_rdo: data })
+    });
+  } catch(e) { console.warn('RDO chiudi webhook:', e); }
+}
+
+function rdoGiorniColore(data) {
+  if (!data) return { giorni: '?', colore: 'var(--ink3)' };
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  const d = new Date(data); d.setHours(0,0,0,0);
+  const diff = Math.round((oggi - d) / 86400000);
+  let colore = '#00e676';                      // verde: entro 24h
+  if (diff >= 3) colore = '#ff5252';           // rosso: oltre 72h
+  else if (diff >= 1) colore = 'var(--amber)'; // giallo: 24-72h
+  return { giorni: diff, colore };
+}
+
+function renderRdo() {
+  const rdo = getRdoAperte();
+  const ti = document.getElementById('tab-rdo');
+  if (ti) ti.textContent = rdo.length > 0 ? `RDO (${rdo.length})` : 'RDO';
+  if (mlTab !== 'rdo') return;
+  const q = (document.getElementById('ml-q')?.value||'').toLowerCase();
+  const lista = q ? rdo.filter(r => (r.cliente+r.oggetto).toLowerCase().includes(q)) : rdo;
+  document.getElementById('ml-list').innerHTML = lista.length === 0
+    ? `<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUNA RICHIESTA IN ATTESA</div>`
+    : lista.map(r => {
+        const { giorni, colore } = rdoGiorniColore(r.data);
+        return `<div class="card" style="border-left:2px solid ${colore}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:9px;color:var(--amber);font-family:var(--fm);font-weight:700;letter-spacing:1px">⏳ IN ATTESA DI RISPOSTA</div>
+            <div style="font-size:11px;font-family:var(--fm);color:${colore};font-weight:700">${giorni === '?' ? '?' : giorni === 0 ? 'OGGI' : giorni+'gg'}</div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px">${esc(r.cliente)}</div>
+          <div style="font-size:12px;color:var(--ink2);margin-bottom:3px">${esc(r.oggetto||'(nessun oggetto)')}</div>
+          <div style="font-size:11px;color:var(--ink3);font-family:var(--fm);margin-bottom:10px">Da: ${esc(r.da)} · ${r.data}</div>
+          <button onclick="chiudiRdoManuale('${esc(r.cliente)}','${esc(r.data)}')" style="width:100%;padding:7px;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.2);border-radius:8px;color:#ff5252;font-family:var(--fm);font-size:11px;cursor:pointer;letter-spacing:.5px">✕ CHIUDI MANUALMENTE</button>
+        </div>`;
+      }).join('');
+}
+
 function setMailTab(t,btn) {
   mlTab=t;
   document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('on'));
@@ -1882,6 +2034,8 @@ function renderMail() {
   const ti = document.getElementById('tab-inbox');
   if(ti) ti.textContent = inbox.length > 0 ? `INBOX (${inbox.length})` : 'INBOX';
 
+  renderRdo();
+  if (mlTab === 'rdo') return;
   if (mlTab === 'inbox') {
     document.getElementById('ml-list').innerHTML = inbox.length === 0
       ? `<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN CLIENTE DA APPROVARE</div>`
@@ -2893,6 +3047,8 @@ badges();
 // Poi sincronizza da Sheets in background
 syncClienti();
 syncSheets();
+syncRdoChiuse();
+syncRdoChiuse();
 setInterval(syncSheets, 3*60*1000);
 setInterval(flushQueue, 30*1000);
 
