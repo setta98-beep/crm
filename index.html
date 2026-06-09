@@ -927,13 +927,15 @@ function badges() {
 ═══════════════════════════════════════════════════ */
 function consMini(cons) {
   if (!cons) return '';
-  return '<div class="cons-bar">' + CONS_KEYS.map(k => {
-    const v = cons[k];
-    const ic = CONS_IC[k]||'·';
-    if (v === '0' || v === 0) return `<div class="cons-dot zero" title="${k}: non usa">${ic}</div>`;
-    if (!v || v === '') return `<div class="cons-dot empty" title="🔍 ${k}: dato mancante!">🔍</div>`;
-    return `<div class="cons-dot filled" title="${k}: ${v}">${ic}</div>`;
-  }).join('') + '</div>';
+  const nomi = {barre:'Barre', piastre:'Piastre', profili:'Profili', lamiere:'Lamiere'};
+  const attivi = CONS_KEYS.filter(k => {
+    const v = String(cons[k]||'').trim().toLowerCase();
+    return v === 'si' || v === 'sì' || v === '1' || v === 'yes';
+  });
+  if (!attivi.length) return '';
+  return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'
+    + attivi.map(k => `<span style="font-size:10px;font-family:var(--fm);padding:2px 7px;border-radius:5px;background:rgba(0,212,255,.1);color:var(--cyan);letter-spacing:.4px">${nomi[k]||k}</span>`).join('')
+    + '</div>';
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1396,7 +1398,7 @@ function renderConsumi(cons) {
   const cat = [
     {k:'barre',   nome:'Barre',          bg:'rgba(0,212,255,.08)',  col:'var(--cyan)'},
     {k:'piastre', nome:'Piastre',         bg:'rgba(187,134,252,.08)',col:'var(--purple)'},
-    {k:'profili', nome:'Profili estrusi', bg:'rgba(0,230,118,.08)',  col:'var(--green)'},
+    {k:'profili', nome:'Profili', bg:'rgba(0,230,118,.08)',  col:'var(--green)'},
     {k:'lamiere', nome:'Lamiere',         bg:'rgba(255,179,0,.08)',  col:'var(--amber)'},
   ];
   return cat.map(ct => {
@@ -1541,7 +1543,7 @@ function editConsumi(id) {
   const cat = [
     {k:'barre',   label:'Barre'},
     {k:'piastre', label:'Piastre'},
-    {k:'profili', label:'Profili estrusi'},
+    {k:'profili', label:'Profili'},
     {k:'lamiere', label:'Lamiere'},
   ];
   function btnRow(ct) {
