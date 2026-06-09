@@ -1356,7 +1356,7 @@ function renderScheda(id) {
         <div class="sez-ttl">// DESCRIZIONE AZIENDA <button class="sez-edit" onclick="editDescrizione('${id}')">EDIT</button></div>
         <div id="descr-${id}">
           ${c.descrizione
-            ? `<div class="descr-txt">${esc(c.descrizione)}</div>`
+            ? `<div class="descr-txt" style="white-space:pre-wrap">${esc(c.descrizione)}</div>`
             : `<div class="ai-loading" id="ai-descr-${id}"><span class="pulse"></span><span>JARVIS ANALIZZA...</span></div>`}
         </div>
       </div>
