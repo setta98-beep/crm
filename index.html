@@ -1232,7 +1232,7 @@ function openClienteForm(id) {
     </div>
     <div class="fg"><label class="fl">Indirizzo</label><input class="fi" id="f-ind" value="${esc(c?.indirizzo||'')}"></div>
     <div style="display:grid;grid-template-columns:90px 1fr;gap:8px">
-      <div class="fg"><label class="fl">CAP</label><input class="fi" id="f-cap" value="${esc(c?.cap||'')}"></div>
+      <div class="fg"><label class="fl">CAP</label><input class="fi" id="f-cap" value="${esc(c?.cap||'')}" oninput="lookupCap(this.value,'f')"></div>
       <div class="fg"><label class="fl">P. IVA</label><input class="fi" id="f-pi" value="${esc(c?.piva||'')}"></div>
     </div>
     <div class="fg"><label class="fl">Referenti</label><textarea class="fi" id="f-co" rows="2">${esc(c?.contatto||'')}</textarea></div>
@@ -1439,7 +1439,7 @@ function editAnagrafica(id) {
   box.innerHTML = `
     <div class="fg"><label class="fl">Indirizzo</label><input class="edit-field" id="ea-ind" value="${esc(c.indirizzo||'')}"></div>
     <div style="display:grid;grid-template-columns:90px 1fr 60px;gap:8px">
-      <div class="fg"><label class="fl">CAP</label><input class="edit-field" id="ea-cap" value="${esc(c.cap||'')}"></div>
+      <div class="fg"><label class="fl">CAP</label><input class="edit-field" id="ea-cap" value="${esc(c.cap||'')}" oninput="lookupCap(this.value,'ea')"></div>
       <div class="fg"><label class="fl">Città</label><input class="edit-field" id="ea-ci" value="${esc(c.citta||'')}"></div>
       <div class="fg"><label class="fl">Prov</label><input class="edit-field" id="ea-pr" value="${esc(c.pr||'')}" maxlength="2"></div>
     </div>
@@ -1866,7 +1866,7 @@ function renderMail() {
               </div>
               ${m.nuovoReferente
                 ? '<div style="display:flex;gap:8px"><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="aggiungiReferenteInbox('+i+')">👤 AGGIUNGI REFERENTE</button><button class="btn btn-s" style="flex:1;justify-content:center;font-size:12px" onclick="ignoraInbox('+i+')">✕ IGNORA</button></div>'
-                : '<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;cliente&apos;)">👤 CLIENTE</button><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px;background:rgba(187,134,252,.15);border-color:var(--purple);color:var(--purple)" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;fornitore&apos;)">🏭 FORNITORE</button></div><div style="display:flex;gap:8px"><button class="btn" style="flex:1;justify-content:center;font-size:12px;background:rgba(0,212,255,.1);border-color:var(--cyan);color:var(--cyan)" onclick="collegaClienteEsistenteInbox('+i+')">🔗 COLLEGA A ESISTENTE</button><button class="btn btn-s" style="flex:1;justify-content:center;font-size:12px" onclick="ignoraInbox('+i+')">✕ IGNORA</button></div>'
+                : '<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;cliente&apos;)">👤 CLIENTE</button><button class="btn btn-p" style="flex:1;justify-content:center;font-size:12px;background:rgba(187,134,252,.15);border-color:var(--purple);color:var(--purple)" onclick="approvaClienteInbox('+i+',&apos;'+esc(nomeGuess)+'&apos;,&apos;'+esc(dom)+'&apos;,&apos;fornitore&apos;)">🏭 FORNITORE</button></div><button class="btn btn-s" style="width:100%;justify-content:center;font-size:12px" onclick="ignoraInbox('+i+')">✕ IGNORA</button>'
               }
             </div>`;
         }).join('');
@@ -2695,103 +2695,6 @@ async function salvaReferenteInbox(cid, idx) {
   closeMo(); badges(); renderMail();
 }
 
-function collegaClienteEsistenteInbox(idx) {
-  const inbox = getInboxSorted();
-  const m = inbox[idx]; if (!m) return;
-
-  // Ordina clienti per nome
-  const lista = [...clienti]
-    .filter(c => c.stato !== 'Fornitore')
-    .sort((a,b) => (a.azienda||'').localeCompare(b.azienda||''));
-
-  const opts = lista.map(c =>
-    `<option value="${esc(c.id)}">${esc(c.azienda)}${c.citta ? ' — '+esc(c.citta) : ''}</option>`
-  ).join('');
-
-  openMo(`<div class="mo-ttl">Collega a cliente esistente<button class="mo-x" onclick="closeMo()">✕</button></div>
-    <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:12px;margin-bottom:14px">
-      <div style="font-size:10px;color:var(--cyan);font-family:var(--fm);margin-bottom:4px">// MAIL DA COLLEGARE</div>
-      <div style="font-size:12px;color:var(--ink);font-weight:600;margin-bottom:2px">${esc(m.oggetto||'')}</div>
-      <div style="font-size:11px;color:var(--ink3);font-family:var(--fm)">Da: ${esc(m.da)}</div>
-    </div>
-    <div class="fg">
-      <label class="fl">Cerca e seleziona cliente</label>
-      <input class="fi" id="collega-search" placeholder="Digita per filtrare..." oninput="filtraOpzioniCollega()" style="margin-bottom:6px">
-      <select class="fi" id="collega-select" size="6" style="height:auto;min-height:120px">${opts}</select>
-    </div>
-    <div id="collega-ref-wrap" style="margin-top:8px">
-      <div style="font-size:10px;color:var(--ink3);font-family:var(--fm);margin-bottom:6px">DATI DA AGGIUNGERE ALLA SCHEDA (solo se mancanti)</div>
-      <div class="fg"><label class="fl">Referente</label><input class="fi" id="collega-ref" value="${esc(m.referente && !['emanuela','daria','valentina','tamara','daniele','davide','nicole'].some(x => (m.referente||'').toLowerCase().includes(x)) ? m.referente : '')}"></div>
-      <div class="fg"><label class="fl">Email contatto</label><input class="fi" id="collega-mail" value="${esc(m.referenteEmail && !m.referenteEmail.includes('comefimetalli') ? m.referenteEmail : '')}"></div>
-    </div>
-    <div class="mo-acts">
-      <button class="btn btn-s" onclick="closeMo()">Annulla</button>
-      <button class="btn btn-p" onclick="confermaCollegaCliente(${idx})">🔗 COLLEGA</button>
-    </div>`);
-}
-
-function filtraOpzioniCollega() {
-  const q = (document.getElementById('collega-search')?.value || '').toLowerCase();
-  const sel = document.getElementById('collega-select');
-  if (!sel) return;
-  const lista = [...clienti]
-    .filter(c => c.stato !== 'Fornitore')
-    .sort((a,b) => (a.azienda||'').localeCompare(b.azienda||''));
-  const filtrati = q ? lista.filter(c => (c.azienda||'').toLowerCase().includes(q)) : lista;
-  sel.innerHTML = filtrati.map(c =>
-    `<option value="${esc(c.id)}">${esc(c.azienda)}${c.citta ? ' — '+esc(c.citta) : ''}</option>`
-  ).join('');
-}
-
-async function confermaCollegaCliente(idx) {
-  const sel = document.getElementById('collega-select');
-  const cid = sel?.value; if (!cid) { alert('Seleziona un cliente'); return; }
-  const inbox = getInboxSorted();
-  const m = inbox[idx]; if (!m) return;
-
-  // Trova cliente
-  const c = clienti.find(x => x.id === cid); if (!c) return;
-
-  // Aggiorna referente/email solo se mancanti
-  const nuovoRef  = (document.getElementById('collega-ref')?.value || '').trim();
-  const nuovaMail = (document.getElementById('collega-mail')?.value || '').trim();
-  let aggiornato = false;
-
-  if (nuovoRef && !c.contatto) {
-    c.contatto = nuovoRef; aggiornato = true;
-  } else if (nuovoRef && c.contatto && !c.contatto.toLowerCase().includes(nuovoRef.toLowerCase())) {
-    c.contatto = c.contatto + ' | ' + nuovoRef; aggiornato = true;
-  }
-  if (nuovaMail && !c.mail) {
-    c.mail = nuovaMail; aggiornato = true;
-  } else if (nuovaMail && c.mail && !c.mail.toLowerCase().includes(nuovaMail.toLowerCase())) {
-    c.mail = c.mail + ' | ' + nuovaMail; aggiornato = true;
-  }
-
-  if (aggiornato) {
-    W('_clienti', clienti);
-    await pushSheet(WH_CLIENTE, {...c, _azione: 'update'});
-  }
-
-  // Aggiorna mailLog: associa questa mail al cliente
-  mailLog = mailLog.map(raw => {
-    const rawDa  = (raw['DA']||raw['da']||'').toString();
-    const rawOgg = (raw['OGGETTO']||raw['oggetto']||'').toString();
-    const rawData= (raw['DATA']||raw['data']||'').toString().split(' ')[0].split('T')[0];
-    if (rawData === m.data && rawOgg === m.oggetto && rawDa.includes((m.da||'').replace(/[<>]/g,''))) {
-      if (raw.CLIENTE_RICONOSCIUTO !== undefined) return {...raw, CLIENTE_RICONOSCIUTO: c.azienda, SALVATO_CRM: 'SI'};
-      return {...raw, cliente_riconosciuto: c.azienda, salvato_crm: 'SI'};
-    }
-    return raw;
-  });
-  W('_mail', mailLog);
-  await aggiornaMailStatus(m, 'SI', 'SI', 'NO');
-
-  closeMo();
-  renderMail();
-  badges();
-}
-
 function approvaClienteInbox(idx, nomeGuess, dom, tipo='cliente') {
   const inbox = getInboxSorted();
   const m = inbox[idx]; if(!m) return;
@@ -3022,6 +2925,31 @@ async function analizzaConsumi(id) {
     if(box) box.innerHTML = renderConsumi(c.consumi||{});
   }
 }
+
+async function lookupCap(cap, pfx) {
+  if (!cap || cap.length < 5) return;
+  try {
+    const r = await fetch('https://api.zippopotam.us/it/' + cap);
+    if (!r.ok) return;
+    const d = await r.json();
+    const place = d.places?.[0];
+    if (!place) return;
+    const citta = place['place name'] || '';
+    const pr    = place['state abbreviation'] || '';
+    const elCi  = document.getElementById(pfx + '-ci');
+    const elPr  = document.getElementById(pfx + '-pr');
+    // Compila solo se il campo è vuoto o era già compilato dal CAP (non dall'utente)
+    if (elCi && (!elCi.value || elCi.dataset.capFilled === '1')) {
+      elCi.value = citta.toUpperCase();
+      elCi.dataset.capFilled = '1';
+    }
+    if (elPr && (!elPr.value || elPr.dataset.capFilled === '1')) {
+      elPr.value = pr.toUpperCase();
+      elPr.dataset.capFilled = '1';
+    }
+  } catch(e) { /* silenzioso */ }
+}
+
 </script>
 </body>
 </html>
