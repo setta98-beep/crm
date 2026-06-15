@@ -1895,13 +1895,18 @@ function normMail(m) {
 
 // ── RICHIESTE D'OFFERTA APERTE ───────────────────────────────────────────────
 const RDO_APRI = ['richiesta', 'rdo', 'rof', 'offerta', 'disponib', 'quotazion', 'preventiv'];
-const RDO_CHIUDI = ['preventivo comefi', 'offerta comefi', 'non disponib', 'non disp', 'declino', 'declina', 'materiale non'];
+const RDO_CHIUDI = ['preventivo comefi', 'offerta comefi', 'non disponib', 'non disp', 'declino', 'declina', 'materiale non', 'nostra offerta', 'in allegato', 'come da richiesta', 'proponiamo', 'ovc', 'prv '];
 
 function isRdoApertura(m) {
   if (m.tipo !== 'IN') return false;
   const ogg = (m.oggetto||'').toLowerCase();
-  // Esclude mail di sistema/interne
+  const corpo = (m.corpo||'').toLowerCase();
+  // Solo clienti riconosciuti nel CRM
   if (!m.cliente) return false;
+  // Esclude mail da @comefimetalli.it (interne)
+  const da = (m.da||'').toLowerCase();
+  if (da.includes('comefimetalli')) return false;
+  // Deve matchare almeno una keyword RDO nell'oggetto (non nel corpo — troppo generico)
   return RDO_APRI.some(k => ogg.includes(k));
 }
 
@@ -1909,7 +1914,13 @@ function isRdoChiusura(m, cliente) {
   if (m.tipo !== 'OUT') return false;
   if ((m.cliente||'').toLowerCase() !== (cliente||'').toLowerCase()) return false;
   const ogg = (m.oggetto||'').toLowerCase();
-  return RDO_CHIUDI.some(k => ogg.includes(k));
+  const corpo = (m.corpo||'').toLowerCase();
+  // Pattern allegato PRV o OVC — chiude sempre (è un preventivo o conferma)
+  if (/c\d{5,}\s*(prv|ovc)/i.test(m.oggetto||'') || /c\d{5,}\s*(prv|ovc)/i.test(m.corpo||'')) return true;
+  // Oggetto contiene "prv" + numero → preventivo inviato
+  if (/prv\s*\d{3,}/i.test(m.oggetto||'')) return true;
+  // Keywords standard oggetto o corpo
+  return RDO_CHIUDI.some(k => ogg.includes(k) || corpo.includes(k));
 }
 
 function getRdoAperte() {
