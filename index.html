@@ -1900,13 +1900,12 @@ const RDO_CHIUDI = ['preventivo comefi', 'offerta comefi', 'non disponib', 'non 
 function isRdoApertura(m) {
   if (m.tipo !== 'IN') return false;
   const ogg = (m.oggetto||'').toLowerCase();
-  const corpo = (m.corpo||'').toLowerCase();
-  // Solo clienti riconosciuti nel CRM
-  if (!m.cliente) return false;
-  // Esclude mail da @comefimetalli.it (interne)
+  // Esclude mail da @comefimetalli.it (interne) e mail di sistema senza mittente
   const da = (m.da||'').toLowerCase();
-  if (da.includes('comefimetalli')) return false;
-  // Deve matchare almeno una keyword RDO nell'oggetto (non nel corpo — troppo generico)
+  if (!da || da.includes('comefimetalli')) return false;
+  // Esclude mail-daemon, newsletter, notifiche automatiche
+  if (da.includes('mail-daemon') || da.includes('noreply') || da.includes('no-reply') || da.includes('mailer-daemon')) return false;
+  // Deve matchare almeno una keyword RDO nell'oggetto
   return RDO_APRI.some(k => ogg.includes(k));
 }
 
