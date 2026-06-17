@@ -554,6 +554,7 @@ textarea.edit-field{resize:vertical;min-height:80px}
       <button class="tab" onclick="setMailTab('out',this)">OUT</button>
       <button class="tab" id="tab-inbox" onclick="setMailTab('inbox',this)">INBOX</button>
       <button class="tab" id="tab-rdo" onclick="setMailTab('rdo',this)">RDO</button>
+      <button class="tab" id="tab-stats" onclick="setMailTab('stats',this)">📊 STATS</button>
     </div>
     <div id="ml-list"></div>
   </div>
@@ -2015,8 +2016,147 @@ function renderRdo() {
       }).join('');
 }
 
+
+async function syncRdoSheet() {
+  try {
+    const SHEET_ID = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=RDO`;
+    const r = await fetch(url); const txt = await r.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return [];
+    const data = JSON.parse(match[1]);
+    const cols = (data.table?.cols||[]).map(c => c.label||c.id||'');
+    return (data.table?.rows||[]).map(row => {
+      const o = {};
+      cols.forEach((col,i) => { o[col] = row.c?.[i]?.v ?? ''; });
+      return o;
+    }).filter(r => r.CLIENTE);
+  } catch(e) { console.warn('syncRdoSheet:', e.message); return []; }
+}
+
+async function renderStats() {
+  if (mlTab !== 'stats') return;
+  const el = document.getElementById('ml-list');
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink3);font-family:var(--fm)">// CARICO DATI...</div>';
+
+  const rdo = await syncRdoSheet();
+  if (!rdo.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);font-family:var(--fm)">// NESSUN DATO RDO DISPONIBILE</div>';
+    return;
+  }
+
+  const tot     = rdo.length;
+  const aperte  = rdo.filter(r => r.STATO === 'APERTA').length;
+  const evase   = rdo.filter(r => r.STATO === 'EVASA').length;
+  const ordini  = rdo.filter(r => r.STATO === 'ORDINE').length;
+  const declin  = rdo.filter(r => r.STATO === 'DECLINATA').length;
+  const pConv   = tot > 0 ? Math.round((ordini / tot) * 100) : 0;
+  const pEvas   = tot > 0 ? Math.round(((evase + ordini) / tot) * 100) : 0;
+
+  // Tempo medio risposta (giorni)
+  const tempi = rdo.filter(r => r.DATA && r.DATA_CHIUSURA && r.STATO !== 'APERTA').map(r => {
+    const d1 = new Date(r.DATA); const d2 = new Date(r.DATA_CHIUSURA);
+    return Math.max(0, Math.round((d2-d1)/86400000));
+  });
+  const tmedio = tempi.length ? Math.round(tempi.reduce((a,b)=>a+b,0)/tempi.length) : null;
+
+  // Top clienti per RDO
+  const perCliente = {};
+  rdo.forEach(r => { perCliente[r.CLIENTE] = (perCliente[r.CLIENTE]||0)+1; });
+  const topClienti = Object.entries(perCliente).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Trend mensile (ultimi 6 mesi)
+  const mesi = {};
+  rdo.forEach(r => {
+    if (!r.DATA) return;
+    const m = r.DATA.substring(0,7);
+    if (!mesi[m]) mesi[m] = {tot:0,ord:0};
+    mesi[m].tot++;
+    if (r.STATO === 'ORDINE') mesi[m].ord++;
+  });
+  const mesiOrd = Object.keys(mesi).sort().slice(-6);
+
+  const barW = (v, max) => Math.round((v/Math.max(max,1))*100);
+
+  el.innerHTML = `
+    <div style="padding:4px 0 16px">
+
+      <!-- KPI row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+        ${[
+          {label:'TOTALE RDO', val:tot, col:'var(--cyan)'},
+          {label:'APERTE',     val:aperte, col:'var(--amber)'},
+          {label:'EVASE',      val:evase+ordini, col:'var(--green)'},
+          {label:'ORDINI',     val:ordini, col:'#00e676'},
+        ].map(k=>`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:10px;padding:12px 8px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:${k.col}">${k.val}</div>
+          <div style="font-size:9px;color:var(--ink3);font-family:var(--fm);margin-top:2px">${k.label}</div>
+        </div>`).join('')}
+      </div>
+
+      <!-- Conversione -->
+      <div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:10px;color:var(--cyan);font-family:var(--fm);margin-bottom:10px">// TASSO DI CONVERSIONE</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="font-size:11px;color:var(--ink3);width:80px;font-family:var(--fm)">RDO→ORDINE</div>
+          <div style="flex:1;background:var(--bg3);border-radius:4px;height:8px">
+            <div style="width:${pConv}%;background:#00e676;border-radius:4px;height:8px;transition:.3s"></div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:#00e676;width:36px;text-align:right">${pConv}%</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:11px;color:var(--ink3);width:80px;font-family:var(--fm)">RISPOSTE</div>
+          <div style="flex:1;background:var(--bg3);border-radius:4px;height:8px">
+            <div style="width:${pEvas}%;background:var(--cyan);border-radius:4px;height:8px;transition:.3s"></div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:var(--cyan);width:36px;text-align:right">${pEvas}%</div>
+        </div>
+        ${tmedio !== null ? `<div style="margin-top:10px;font-size:11px;color:var(--ink3);font-family:var(--fm)">Tempo medio risposta: <span style="color:var(--ink);font-weight:600">${tmedio} giorni</span></div>` : ''}
+      </div>
+
+      <!-- Trend mensile -->
+      ${mesiOrd.length ? `<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:10px;color:var(--cyan);font-family:var(--fm);margin-bottom:10px">// TREND MENSILE</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:70px">
+          ${mesiOrd.map(m => {
+            const d = mesi[m];
+            const hTot = barW(d.tot, Math.max(...mesiOrd.map(x=>mesi[x].tot)));
+            const hOrd = barW(d.ord, Math.max(...mesiOrd.map(x=>mesi[x].tot)));
+            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+              <div style="width:100%;background:var(--bg3);border-radius:3px 3px 0 0;height:60px;display:flex;align-items:flex-end">
+                <div style="width:100%;display:flex;gap:2px;align-items:flex-end;padding:0 2px">
+                  <div style="flex:1;background:rgba(0,212,255,.3);border-radius:2px;height:${hTot*0.6}px"></div>
+                  <div style="flex:1;background:#00e676;border-radius:2px;height:${hOrd*0.6}px"></div>
+                </div>
+              </div>
+              <div style="font-size:8px;color:var(--ink3);font-family:var(--fm)">${m.substring(5)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <span style="font-size:9px;color:var(--ink3);font-family:var(--fm)"><span style="color:rgba(0,212,255,.6)">■</span> RDO</span>
+          <span style="font-size:9px;color:var(--ink3);font-family:var(--fm)"><span style="color:#00e676">■</span> Ordini</span>
+        </div>
+      </div>` : ''}
+
+      <!-- Top clienti -->
+      ${topClienti.length ? `<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:10px;padding:14px">
+        <div style="font-size:10px;color:var(--cyan);font-family:var(--fm);margin-bottom:10px">// TOP CLIENTI PER RDO</div>
+        ${topClienti.map(([nome,n])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="font-size:11px;color:var(--ink2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(nome)}</div>
+          <div style="background:var(--bg3);border-radius:4px;height:6px;width:80px">
+            <div style="width:${barW(n,topClienti[0][1])}%;background:var(--cyan);border-radius:4px;height:6px"></div>
+          </div>
+          <div style="font-size:11px;color:var(--cyan);font-weight:700;width:16px;text-align:right">${n}</div>
+        </div>`).join('')}
+      </div>` : ''}
+
+    </div>`;
+}
+
 function setMailTab(t,btn) {
   mlTab=t;
+  if (t === 'stats') { renderStats(); return; }
   document.querySelectorAll('.tabs .tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on'); renderMail();
 }
