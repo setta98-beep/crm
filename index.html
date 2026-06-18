@@ -833,10 +833,21 @@ async function syncTask() {
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
     fatto: r.FATTO === 'SI'
   })).filter(n => n.testo);
+  // Merge: per ogni task da Sheets, se esiste in locale usa il valore locale
+  // per il campo "fatto" (evita che sync sovrascriva toggle appena fatto)
+  const localeMap = {};
+  note.forEach(n => { if (n.id) localeMap[n.id] = n; });
+  const merged = daSheet.map(s => {
+    const loc = localeMap[s.id];
+    if (!loc) return s;
+    // Se locale e sheet differiscono su "fatto", tieni il più recente
+    // Non possiamo sapere quale è più recente, ma se locale è true e sheet è false
+    // è quasi certamente perché il webhook non ha ancora scritto → tieni locale
+    return { ...s, fatto: loc.fatto || s.fatto };
+  });
   const sheetIds = new Set(daSheet.map(n => n.id));
-  // Mantieni task locali non ancora sullo sheet
   const soloLocali = note.filter(n => n.id && !sheetIds.has(n.id));
-  note = [...daSheet, ...soloLocali];
+  note = [...merged, ...soloLocali];
   LW('_note', note);
   renderAtt();
   badges();
