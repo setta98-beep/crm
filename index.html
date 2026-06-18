@@ -606,8 +606,6 @@ const SHEET_ID   = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
 const getApiKey = () => S('_apikey') || '';
 const WH_MAIL_STATUS = 'https://danielesettanni.app.n8n.cloud/webhook/aggiorna-mail-status';
 const WH_RDO_CHIUDI = 'https://danielesettanni.app.n8n.cloud/webhook/rdo-chiudi';
-const WH_BRIEFING     = 'https://danielesettanni.app.n8n.cloud/webhook/briefing-cliente';
-const WH_SALVA_BRIEF  = 'https://danielesettanni.app.n8n.cloud/webhook/salva-briefing';
 const WH_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/salva-cliente';
 const WH_NUOVO_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-cliente-inbox';
 const WH_NUOVO_FORNITORE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-fornitore-inbox';
@@ -615,6 +613,7 @@ const COLLEGHI_COMEFI = ["emanuela criscione","daria d'ettorre","daria dettorre"
 const DOMINI_GENERICI = ['gmail.com','yahoo.com','yahoo.it','hotmail.com','hotmail.it','libero.it','outlook.com','outlook.it','live.com','live.it','icloud.com','virgilio.it','tiscali.it','tin.it','fastwebnet.it','alice.it','pec.it'];
 const WH_VISITA  = 'https://danielesettanni.app.n8n.cloud/webhook/salva-visita';
 const WH_TASK    = 'https://danielesettanni.app.n8n.cloud/webhook/salva-task';
+const WH_DEL_TASK = 'https://danielesettanni.app.n8n.cloud/webhook/elimina-task';
 const LISTA_NOMI = 'AA MODELLERIA SRL, ACMI SPA, ACT EUROPE SRL, ADI SPORT, ADM LASER, AE APPARECC. ELETT., AF AUTOMAZIONI, AGLA POWER TRASMISS, AGNELLA BIAGIO, AGRICOOLTUR, AIGLE MACCHINE, AIP PORTE, ALPA MECCANICA, ALUTRON, AM ATTREZZATURE MECCANICHE, AMBROSIO, AMERIO & C. SRL, AMP MECCANICA, AMPRIMO, AMR SRL, ANORS, ARMA SRL, ARME SRL, ARMENI E RAISE, ART-CAR, ARTIOLI PUBBLICITA\', ASSEL, AUNDE ITALIA, AUTOBLOK, AUTOMATION SERVICE TORINO, AVIP, BAGLIETTO, BALDO MODELLI, BASCO SRL, BATTAGLIOTTI, BBV GLASS, BCE, BELTECH, BERTAGLIA MODELLI, BERTINO VALENTINO, BIEMMEDUE SPA, BIG ONE, BISIACH & CARRU\', BITRON, BM CONCEPT, BONETTO CV, BONETTO SRL, BORDONE ALLESTIMENTI, BORNEGO E TRUCCO, BOSCO ITALIA, BRAMBATI SPA, BUSSI MARIO & C. SAS, C3 SRL, CAF, CAL-TECH, CAM SRL, CAMEL, CAMSS, CANGINI, CARPENTECNICA GROUP SRL, CARPENTERIA CARENA, CASAVECCHIA COSTR. MECC., CATTELINO GIOVANNI, CAYRE, CCM FINOTELLO, CEAN, CEDI, CENTINAL, CEPI RACK, CFGM, CHIALES TOOLS & PROJECT SRL, CIEMMEBI, CMA SRL, CMB INDUSTRIES SRL, CMF FORNASINO, CMM SRL, COL GIOVANNI PAOLO, COLD CAR, COLOMBINI, COMATIC, COMMERCIALE FOND, COMMERCIALE SIDERURGICA CUNEESE, CONTE SRL, COPRAUTO SRL, CORIMAMET, COTREL, COUNTRY LAB, COVI, CREDA ENTERPRISE, CSA, CSL INDUSTRIALE, CTS, CUSTOM 2,0, D ENGINEERING, DAME, DAMILANO GROUP, DANISI ENGINEERING, DE WAVE, DEMI SPA, DM MECCANICA, DM PACKAGING, DUTTO ILARIO, ECS, EKO SRL, ELECTRADUE, ELECTRO-PARTS SPA, ELSY, EMMEGI SCS, ERGOTECH, EURODIES, EUROMEC 2000, EUROSTAMP 1, F.LLI LATINI, F.LLI LUCCO-BORLERA, FIBET, FODISA, FONDERIA SAN FERMO, FRAMIC, FRANCHINO SRL, FRE&FREA, FRIMED, FTR, GAA, GAI MACCHINE SPA, GALEASSO, GALLETTO RADIATORI, GALOSSO GIOVANNI, GARIGLIO MECCANICA, GATTINO SRL, GB MECCANICA, GDR, GEOFER, GHISALBA, GIGLIO ATTREZ. E STAMPI, GINALCO, GIORDANO ALLESTIMENTI, GIORDANO LAMIERE, GIORIO, GIOVARA MECCANICA, GOLDEN CAR, GOMA ELETTRONICA, GP TECNICA, GRAZIADIO, GROB, GS & T, GS MERCALLESE, GUIDA, HANGAR, HB TECHNOLOGY, HBTS, HONESTAMP, HS SRL, ICOM, ILAS, ILMED, IMA TELEROBOT, IMPICCICHE AGOSTINO, INDUCTION, INOXTEK, INTERFIERE, IPAS SPA, IRONCUT SRL, ISCM, ITALPLANT, ITALPOOL, ITD, JORIO, K-TRONIC, LA TAVOLA, LABORMEC, LASERGATE, LASERLAM, LDA DESIGN, LISA INDUSTRIE, LISTELLO LUCA OFF. MECC., LITA, LIVE-TECH, LL DI LANOTTE, LL LAVORAZIONI LAMIERE, LMP2, LUCENOVA SRL, LUMALAB, LUMEC, LUMILIGHT, MABO SRL, MARIO PINTO SPA, MARZERO SAS, MAST MECCANICA, MCM DI MASERA, MCTECH, MDC DESIGN, MECCANIA, MECVIL, MERLO SRL, MET ACCIAI, MET ITALIA SRL, METAL CONTAINER, METALPLAST SOPRANA, METALTECNICA SRL, MF MELE, MGM ROBOTICS, MISA SNC, MIV INSULATING SYSTEMS SRL, MLLA, MODAR, MOVINTER, MTE, MTH, MULTITEL PAGLIERO, NABTESCO OCLAP, NANCHINO AUTOMAZ. IND., NC2 GRID, NG RUSCONI, NKE AUTOMATION, NOGI, NORD LEGNAMI GROUP SRL, NOVO, NUOVA ARMANDI, NUOVA BN, NUOVA SIMACH, NUOVA TECNO TAU, NUOVA TFM, OCF DI AGHEMO, OFFICINE ABRIOLA, OFFICINE BERTOLOTTI, OFFICINE GAUDINO, OLIVOTTO, OLL, OLMA, OLMEDO SPECIAL VEHICLES, OM PROJECT, OM3, OMAP, OMAR TECHNOLOGIES, OMAR VEICOLI INDUSTRIALI, OMAS, OMBI SRL, OMEK, OMER PRODUZIONE, OMG, OMG MANUFACTURING, OMLER 2000, OPAC MARE, OTS ASSEMBLY, P&P ITALIA, PALASER, PALUMBO LEGNAMI, PETRAMAR, PETRAMAR, PFM SPA, PIACENZA MECCANICA, PISCAZZI, PL&TL, PLAF, PODIUM, POGLIANO BUSBAR, PREMEC, PRINCIPI, PROIETTA, PROMOD, PROTOIN, PUSPACE, RACK PERUZZI, RG TECH, RGV, RIVESTAUTO, RPG, RSA AUTOMAZIONI, SACMI, SAFET, SAMEC, SAMSON GROUP, SANTIANO, SARVADON, SBF TECHNICAL SOLUTIONS S.R.L., SCAET, SCAM, SHANTI GSA, SIDER, SILATECH, SIMA DI NARDO STEFANO, SIMIC, SIMPRO, SIRN, SL BRANDIZZO, SMAT NORD, SMELL, SOLA NEON, SPARK, SPEA, STARK, STP SCALE, SYNTAX, TAURUS SAGES, TECNO EDM SRL, TECNO LAMIERA, TECNO TAU, TECNOFER, TECNOMEC, TEKFER, TEKNO ALFA, TELMA, TEMA, TERMOMACCHINE, TESIO COOLING, TLM, TLM, TONON, TOVO, TPF, TPRO, TRASPARENTE, TRELLEBORG, TS, TUXOR, UNICABLE, VIBEL, WINGECO, WOODEX, ZETA MECCANICA, FIDIA MACCHINE GRAFICHE SRL, VM SRL, F.S. MODELLI S.R.L., TEKNEL CONSULT SRL, DTE SRL, ONEDGE, RECARO - CASELETTE, RECARO - RIVOLI, PERANO SPA, VER-MEC, PROMEK ROBOTIC SOLUTION SRL, FERRARI & CARENA, STEAT SRL, SAMIND';
 
 /* ═══════════════════════════════════════════════════
@@ -989,24 +988,6 @@ async function syncRdoChiuse() {
     const locali = S('_rdo_chiuse') || [];
     W('_rdo_chiuse', [...new Set([...chiuse, ...locali])]);
   } catch(e) { console.warn('syncRdoChiuse:', e.message); }
-}
-
-async function syncConfig() {
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk/gviz/tq?tqx=out:json&sheet=CONFIG`;
-    const r = await fetch(url); const txt = await r.text();
-    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
-    if (!match) return;
-    const data = JSON.parse(match[1]);
-    const rows = data.table?.rows || [];
-    window.configMap = {};
-    rows.forEach(row => {
-      const k = row.c?.[0]?.v || '';
-      const v = row.c?.[1]?.v || '';
-      const n = row.c?.[2]?.v || '';
-      if (k) { window.configMap[k] = v; if (n) window.configMap[k+'_NOTE'] = n; }
-    });
-  } catch(e) { console.warn('syncConfig:', e.message); }
 }
 
 async function syncSheets() {
@@ -1399,16 +1380,6 @@ function renderScheda(id) {
     </div>
     <div class="scheda-scroll">
 
-      <div class="sez" id="brief-sez-${id}">
-        <div class="sez-ttl" style="color:var(--cyan)">// BRIEFING JARVIS</div>
-        <div id="brief-${id}" style="font-size:12.5px;color:var(--ink2);line-height:1.6;font-family:var(--ff)">
-          <div style="display:flex;align-items:center;gap:8px;color:var(--ink3);font-family:var(--fm);font-size:11px">
-            <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block"></span>
-            JARVIS ANALIZZA...
-          </div>
-        </div>
-      </div>
-
       <div class="sez">
         <div class="sez-ttl">// ANAGRAFICA <button class="sez-edit" onclick="editAnagrafica('${id}')">EDIT</button></div>
         <div id="anagrafica-${id}">
@@ -1466,7 +1437,6 @@ function renderScheda(id) {
 
     </div>`;
 
-  setTimeout(() => caricaBriefing(id), 200);
   if (!c.descrizione) setTimeout(() => caricaDescrizione(id), 300);
   if (c.consumi && !Object.values(c.consumi).some(v=>v) && (mieVisite.length||mieMail.length)) {
     setTimeout(() => analizzaConsumi(id), 900);
@@ -1675,112 +1645,6 @@ async function saveConsumi(id) {
 }
 
 
-async function caricaBriefing(id, forza=false) {
-  const c = clienti.find(x => x.id === id);
-  if (!c) return;
-  const el = document.getElementById('brief-' + id);
-  if (!el) return;
-
-  // ── Leggi cache da CONFIG (già sincronizzato in memoria) ──────────────────
-  const chiave = 'BRIEF_' + id;
-  const cached = configMap ? configMap[chiave] : null;
-  const cachedTs = cached ? (configMap['BRIEF_TS_' + id] || '') : '';
-
-  // Calcola timestamp più recente tra visite e mail del cliente
-  const mieVisite = visite.filter(v => v.azienda === c.azienda);
-  const mieMail   = mailLog.map(normMail).filter(m =>
-    (m.cliente||'').toLowerCase() === c.azienda.toLowerCase() ||
-    (c.dominio && m.da && c.dominio.toLowerCase().split(/\s+/).some(d => d && m.da.toLowerCase().includes(d)))
-  );
-  const mieTask = note.filter(n => n.azienda === c.azienda && !n.fatto);
-
-  const tsVisite = mieVisite.map(v=>v.data||'').sort().reverse()[0] || '';
-  const tsMail   = mieMail.map(m=>m.data||'').sort().reverse()[0] || '';
-  const tsTask   = mieTask.map(t=>t.data||'').sort().reverse()[0] || '';
-  const tsMax    = [tsVisite, tsMail, tsTask].sort().reverse()[0] || '';
-
-  // Usa cache se aggiornata e non forzata
-  if (!forza && cached && cachedTs >= tsMax && cachedTs) {
-    el.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;color:var(--ink2);line-height:1.65">${esc(cached)}</div>
-      <div style="margin-top:8px;text-align:right">
-        <button onclick="caricaBriefing('${id}', true)" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
-      </div>`;
-    return;
-  }
-
-  // ── Mostra loading ────────────────────────────────────────────────────────
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--ink3);font-family:var(--fm);font-size:11px"><span class="pulse" style="width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block;animation:pulse 1s infinite"></span>JARVIS ANALIZZA...</div>';
-
-  // ── Costruisci prompt ─────────────────────────────────────────────────────
-  const cons = c.consumi || {};
-  const consStr = ['barre','piastre','profili','lamiere']
-    .filter(k => (cons[k]||'').toLowerCase() === 'si').join(', ') || 'non specificati';
-
-  const visiteStr = mieVisite.length
-    ? mieVisite.sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,5)
-        .map(v => `[${v.data}] ${v.tipo}: ${v.note||'nessuna nota'}`).join('\n')
-    : 'Nessuna visita registrata';
-
-  const mailStr = mieMail.length
-    ? mieMail.sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,8)
-        .map(m => `[${m.data}] ${m.tipo} — ${m.oggetto||''}${m.corpo?': '+m.corpo.substring(0,120):''}`).join('\n')
-    : 'Nessuna mail registrata';
-
-  const taskStr = mieTask.length
-    ? mieTask.map(t => `- ${t.testo}${t.data?' (scadenza: '+t.data+')':''}`).join('\n')
-    : 'Nessun task aperto';
-
-  const prompt = `Sei JARVIS, assistente commerciale di Daniele Settanni, agente per Co.Me.Fi. Metalli (distributore alluminio).
-
-Genera un briefing operativo BREVE (max 5 righe) per il cliente "${c.azienda}" da usare prima di una chiamata o visita.
-Tono diretto, pratico. Evidenzia: cosa acquista, stato rapporto, ultime interazioni rilevanti, problemi/criticità passate (reclami, ritardi, insoluti), cosa c'è di aperto.
-
-DATI: Città: ${c.citta||'—'} | Stato: ${c.stato||'—'} | Consumi: ${consStr}
-Descrizione: ${(c.descrizione||'').substring(0,200)}
-
-VISITE:\n${visiteStr}
-
-MAIL:\n${mailStr}
-
-TASK APERTI:\n${taskStr}
-
-Rispondi SOLO con il testo del briefing, senza titoli né markdown. Italiano.`;
-
-  try {
-    const resp = await fetch(WH_BRIEFING, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ prompt })
-    });
-    const data = await resp.json();
-    const testo = data.testo || '';
-    if (!testo) throw new Error('empty');
-
-    // Mostra
-    if (el) {
-      el.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;color:var(--ink2);line-height:1.65">${esc(testo)}</div>
-        <div style="margin-top:8px;text-align:right">
-          <button onclick="caricaBriefing('${id}', true)" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
-        </div>`;
-    }
-
-    // Salva in cache CONFIG via webhook
-    const ts = new Date().toISOString().split('T')[0];
-    fetch(WH_SALVA_BRIEF, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ chiave, testo, ts: ts })
-    }).catch(()=>{});
-
-    // Aggiorna configMap locale
-    if (!window.configMap) window.configMap = {};
-    window.configMap[chiave] = testo;
-    window.configMap['BRIEF_TS_' + id] = ts;
-
-  } catch(e) {
-    if (el) el.innerHTML = '<div style="color:var(--ink3);font-size:11px;font-family:var(--fm)">// briefing non disponibile</div>';
-  }
-}
 
 async function caricaDescrizione(id) {
   const c = clienti.find(x=>x.id===id);
@@ -1917,7 +1781,7 @@ function renderAtt() {
 async function toggleAtt(id) {
   note=note.map(n=>n.id===id?{...n,fatto:!n.fatto}:n); W('_note',note);
   const n=note.find(x=>x.id===id);
-  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto});
+  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto,FATTO:n.fatto?'SI':'NO'});
   renderAtt();
 }
 function detAtt(id) {
@@ -1945,7 +1809,19 @@ async function saveAtt() {
   await pushSheet(WH_TASK, n);
   closeMo(); renderAtt();
 }
-function delAtt(id) { note=note.filter(n=>n.id!==id); W('_note',note); closeMo(); renderAtt(); }
+async function delAtt(id) {
+  note = note.filter(n => n.id !== id);
+  W('_note', note);
+  closeMo();
+  renderAtt();
+  try {
+    await fetch(WH_DEL_TASK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ id })
+    });
+  } catch(e) { console.warn('delAtt webhook:', e); }
+}
 
 /* ═══════════════════════════════════════════════════
    MAIL
@@ -3337,7 +3213,6 @@ badges();
 syncClienti();
 syncSheets();
 syncRdoChiuse();
-syncConfig();
 syncRdoChiuse();
 setInterval(syncSheets, 3*60*1000);
 setInterval(flushQueue, 30*1000);
