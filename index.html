@@ -1379,6 +1379,16 @@ function renderScheda(id) {
     </div>
     <div class="scheda-scroll">
 
+      <div class="sez" id="brief-sez-${id}">
+        <div class="sez-ttl" style="color:var(--cyan)">// BRIEFING JARVIS</div>
+        <div id="brief-${id}" style="font-size:12.5px;color:var(--ink2);line-height:1.6;font-family:var(--ff)">
+          <div style="display:flex;align-items:center;gap:8px;color:var(--ink3);font-family:var(--fm);font-size:11px">
+            <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block"></span>
+            JARVIS ANALIZZA...
+          </div>
+        </div>
+      </div>
+
       <div class="sez">
         <div class="sez-ttl">// ANAGRAFICA <button class="sez-edit" onclick="editAnagrafica('${id}')">EDIT</button></div>
         <div id="anagrafica-${id}">
@@ -1436,6 +1446,7 @@ function renderScheda(id) {
 
     </div>`;
 
+  setTimeout(() => caricaBriefing(id), 200);
   if (!c.descrizione) setTimeout(() => caricaDescrizione(id), 300);
   if (c.consumi && !Object.values(c.consumi).some(v=>v) && (mieVisite.length||mieMail.length)) {
     setTimeout(() => analizzaConsumi(id), 900);
@@ -1641,6 +1652,105 @@ async function saveConsumi(id) {
   const ok = await pushSheet(WH_CLIENTE, {...c, _azione:'update'});
   if(ok) { await syncClienti(); }
   renderScheda(id);
+}
+
+
+async function caricaBriefing(id) {
+  const c = clienti.find(x => x.id === id);
+  if (!c) return;
+  const el = document.getElementById('brief-' + id);
+  if (!el) return;
+
+  // Raccoglie dati contestuali
+  const mieVisite = visite
+    .filter(v => v.azienda === c.azienda)
+    .sort((a,b) => (b.data||'').localeCompare(a.data||''))
+    .slice(0, 5);
+
+  const mieMail = mailLog.map(normMail)
+    .filter(m => {
+      if (m.cliente && m.cliente.toLowerCase() === c.azienda.toLowerCase()) return true;
+      if (c.dominio && m.da) {
+        const doms = c.dominio.toLowerCase().split(/\s+/);
+        if (doms.some(d => d && m.da.toLowerCase().includes(d))) return true;
+      }
+      return false;
+    })
+    .sort((a,b) => (b.data||'').localeCompare(a.data||''))
+    .slice(0, 8);
+
+  const mieTask = note
+    .filter(n => n.azienda === c.azienda && !n.fatto)
+    .sort((a,b) => (a.data||'').localeCompare(b.data||''));
+
+  // Consumi
+  const cons = c.consumi || {};
+  const consStr = ['barre','piastre','profili','lamiere']
+    .filter(k => (cons[k]||'').toLowerCase() === 'si')
+    .join(', ') || 'non specificati';
+
+  // Visite testo
+  const visiteStr = mieVisite.length
+    ? mieVisite.map(v => `[${v.data}] ${v.tipo}: ${v.note||'nessuna nota'}`).join('\n')
+    : 'Nessuna visita registrata';
+
+  // Mail testo
+  const mailStr = mieMail.length
+    ? mieMail.map(m => `[${m.data}] ${m.tipo} — ${m.oggetto||''}${m.corpo ? ': '+m.corpo.substring(0,120) : ''}`).join('\n')
+    : 'Nessuna mail registrata';
+
+  // Task aperti
+  const taskStr = mieTask.length
+    ? mieTask.map(t => `- ${t.testo}${t.data ? ' (scadenza: '+t.data+')' : ''}`).join('\n')
+    : 'Nessun task aperto';
+
+  const prompt = `Sei JARVIS, assistente commerciale di Daniele Settanni, agente di vendita per Co.Me.Fi. Metalli (distributore alluminio).
+
+Genera un briefing operativo BREVE (max 5 righe) per il cliente "${c.azienda}" da usare prima di una chiamata o visita.
+Il tono è diretto, pratico, da collega a collega. Evidenzia sempre:
+1. Cosa acquista principalmente
+2. Stato del rapporto (attivo, freddo, in attesa, ecc.)
+3. Ultime interazioni rilevanti
+4. Problemi o criticità passate (reclami, ritardi, insoluti, richieste non evase)
+5. Cosa c'è di aperto (task, RDO, preventivi in attesa)
+
+DATI CLIENTE:
+Città: ${c.citta||'—'} | Stato: ${c.stato||'—'}
+Descrizione: ${c.descrizione||'non disponibile'}
+Consumi: ${consStr}
+
+ULTIME VISITE:
+${visiteStr}
+
+MAIL RECENTI:
+${mailStr}
+
+TASK APERTI:
+${taskStr}
+
+Rispondi SOLO con il testo del briefing, senza titoli, senza asterischi, senza markdown. Italiano.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const testo = data.content?.[0]?.text || '';
+    if (el && testo) {
+      el.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;color:var(--ink2);line-height:1.65">${esc(testo)}</div>
+        <div style="margin-top:8px;text-align:right">
+          <button onclick="caricaBriefing('${id}')" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
+        </div>`;
+    }
+  } catch(e) {
+    if (el) el.innerHTML = '<div style="color:var(--ink3);font-size:11px;font-family:var(--fm)">// briefing non disponibile</div>';
+  }
 }
 
 async function caricaDescrizione(id) {
