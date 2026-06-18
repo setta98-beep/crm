@@ -833,17 +833,24 @@ async function syncTask() {
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
     fatto: r.FATTO === 'SI'
   })).filter(n => n.testo);
-  // Merge: per ogni task da Sheets, se esiste in locale usa il valore locale
-  // per il campo "fatto" (evita che sync sovrascriva toggle appena fatto)
+
+  // Merge: preferisci valori locali su quelli di Sheets per evitare
+  // che sync sovrascriva modifiche appena fatte prima che il webhook abbia scritto
   const localeMap = {};
   note.forEach(n => { if (n.id) localeMap[n.id] = n; });
   const merged = daSheet.map(s => {
     const loc = localeMap[s.id];
-    if (!loc) return s;
-    // Se locale e sheet differiscono su "fatto", tieni il più recente
-    // Non possiamo sapere quale è più recente, ma se locale è true e sheet è false
-    // è quasi certamente perché il webhook non ha ancora scritto → tieni locale
-    return { ...s, fatto: loc.fatto || s.fatto };
+    if (!loc) return s; // non esiste in locale → usa Sheets
+    // Usa locale su tutti i campi: è sempre più aggiornato di Sheets
+    // (il webhook scrive su Sheets con piccolo ritardo)
+    return {
+      ...s,
+      testo:    loc.testo    || s.testo,
+      azienda:  loc.azienda  !== undefined ? loc.azienda  : s.azienda,
+      data:     loc.data     !== undefined ? loc.data     : s.data,
+      priorita: loc.priorita || s.priorita,
+      fatto:    loc.fatto    || s.fatto
+    };
   });
   const sheetIds = new Set(daSheet.map(n => n.id));
   const soloLocali = note.filter(n => n.id && !sheetIds.has(n.id));
