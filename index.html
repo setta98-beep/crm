@@ -606,6 +606,8 @@ const SHEET_ID   = '1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk';
 const getApiKey = () => S('_apikey') || '';
 const WH_MAIL_STATUS = 'https://danielesettanni.app.n8n.cloud/webhook/aggiorna-mail-status';
 const WH_RDO_CHIUDI = 'https://danielesettanni.app.n8n.cloud/webhook/rdo-chiudi';
+const WH_BRIEFING     = 'https://danielesettanni.app.n8n.cloud/webhook/briefing-cliente';
+const WH_SALVA_BRIEF  = 'https://danielesettanni.app.n8n.cloud/webhook/salva-briefing';
 const WH_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/salva-cliente';
 const WH_NUOVO_CLIENTE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-cliente-inbox';
 const WH_NUOVO_FORNITORE = 'https://danielesettanni.app.n8n.cloud/webhook/nuovo-fornitore-inbox';
@@ -987,6 +989,24 @@ async function syncRdoChiuse() {
     const locali = S('_rdo_chiuse') || [];
     W('_rdo_chiuse', [...new Set([...chiuse, ...locali])]);
   } catch(e) { console.warn('syncRdoChiuse:', e.message); }
+}
+
+async function syncConfig() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/1-bzf05FJ5zB-gJe58RbHY6FT19eU97eIf42e_gQsylk/gviz/tq?tqx=out:json&sheet=CONFIG`;
+    const r = await fetch(url); const txt = await r.text();
+    const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return;
+    const data = JSON.parse(match[1]);
+    const rows = data.table?.rows || [];
+    window.configMap = {};
+    rows.forEach(row => {
+      const k = row.c?.[0]?.v || '';
+      const v = row.c?.[1]?.v || '';
+      const n = row.c?.[2]?.v || '';
+      if (k) { window.configMap[k] = v; if (n) window.configMap[k+'_NOTE'] = n; }
+    });
+  } catch(e) { console.warn('syncConfig:', e.message); }
 }
 
 async function syncSheets() {
@@ -1655,99 +1675,108 @@ async function saveConsumi(id) {
 }
 
 
-async function caricaBriefing(id) {
+async function caricaBriefing(id, forza=false) {
   const c = clienti.find(x => x.id === id);
   if (!c) return;
   const el = document.getElementById('brief-' + id);
   if (!el) return;
 
-  // Raccoglie dati contestuali
-  const mieVisite = visite
-    .filter(v => v.azienda === c.azienda)
-    .sort((a,b) => (b.data||'').localeCompare(a.data||''))
-    .slice(0, 5);
+  // ── Leggi cache da CONFIG (già sincronizzato in memoria) ──────────────────
+  const chiave = 'BRIEF_' + id;
+  const cached = configMap ? configMap[chiave] : null;
+  const cachedTs = cached ? (configMap['BRIEF_TS_' + id] || '') : '';
 
-  const mieMail = mailLog.map(normMail)
-    .filter(m => {
-      if (m.cliente && m.cliente.toLowerCase() === c.azienda.toLowerCase()) return true;
-      if (c.dominio && m.da) {
-        const doms = c.dominio.toLowerCase().split(/\s+/);
-        if (doms.some(d => d && m.da.toLowerCase().includes(d))) return true;
-      }
-      return false;
-    })
-    .sort((a,b) => (b.data||'').localeCompare(a.data||''))
-    .slice(0, 8);
+  // Calcola timestamp più recente tra visite e mail del cliente
+  const mieVisite = visite.filter(v => v.azienda === c.azienda);
+  const mieMail   = mailLog.map(normMail).filter(m =>
+    (m.cliente||'').toLowerCase() === c.azienda.toLowerCase() ||
+    (c.dominio && m.da && c.dominio.toLowerCase().split(/\s+/).some(d => d && m.da.toLowerCase().includes(d)))
+  );
+  const mieTask = note.filter(n => n.azienda === c.azienda && !n.fatto);
 
-  const mieTask = note
-    .filter(n => n.azienda === c.azienda && !n.fatto)
-    .sort((a,b) => (a.data||'').localeCompare(b.data||''));
+  const tsVisite = mieVisite.map(v=>v.data||'').sort().reverse()[0] || '';
+  const tsMail   = mieMail.map(m=>m.data||'').sort().reverse()[0] || '';
+  const tsTask   = mieTask.map(t=>t.data||'').sort().reverse()[0] || '';
+  const tsMax    = [tsVisite, tsMail, tsTask].sort().reverse()[0] || '';
 
-  // Consumi
+  // Usa cache se aggiornata e non forzata
+  if (!forza && cached && cachedTs >= tsMax && cachedTs) {
+    el.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;color:var(--ink2);line-height:1.65">${esc(cached)}</div>
+      <div style="margin-top:8px;text-align:right">
+        <button onclick="caricaBriefing('${id}', true)" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
+      </div>`;
+    return;
+  }
+
+  // ── Mostra loading ────────────────────────────────────────────────────────
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--ink3);font-family:var(--fm);font-size:11px"><span class="pulse" style="width:6px;height:6px;border-radius:50%;background:var(--cyan);display:inline-block;animation:pulse 1s infinite"></span>JARVIS ANALIZZA...</div>';
+
+  // ── Costruisci prompt ─────────────────────────────────────────────────────
   const cons = c.consumi || {};
   const consStr = ['barre','piastre','profili','lamiere']
-    .filter(k => (cons[k]||'').toLowerCase() === 'si')
-    .join(', ') || 'non specificati';
+    .filter(k => (cons[k]||'').toLowerCase() === 'si').join(', ') || 'non specificati';
 
-  // Visite testo
   const visiteStr = mieVisite.length
-    ? mieVisite.map(v => `[${v.data}] ${v.tipo}: ${v.note||'nessuna nota'}`).join('\n')
+    ? mieVisite.sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,5)
+        .map(v => `[${v.data}] ${v.tipo}: ${v.note||'nessuna nota'}`).join('\n')
     : 'Nessuna visita registrata';
 
-  // Mail testo
   const mailStr = mieMail.length
-    ? mieMail.map(m => `[${m.data}] ${m.tipo} — ${m.oggetto||''}${m.corpo ? ': '+m.corpo.substring(0,120) : ''}`).join('\n')
+    ? mieMail.sort((a,b)=>(b.data||'').localeCompare(a.data||'')).slice(0,8)
+        .map(m => `[${m.data}] ${m.tipo} — ${m.oggetto||''}${m.corpo?': '+m.corpo.substring(0,120):''}`).join('\n')
     : 'Nessuna mail registrata';
 
-  // Task aperti
   const taskStr = mieTask.length
-    ? mieTask.map(t => `- ${t.testo}${t.data ? ' (scadenza: '+t.data+')' : ''}`).join('\n')
+    ? mieTask.map(t => `- ${t.testo}${t.data?' (scadenza: '+t.data+')':''}`).join('\n')
     : 'Nessun task aperto';
 
-  const prompt = `Sei JARVIS, assistente commerciale di Daniele Settanni, agente di vendita per Co.Me.Fi. Metalli (distributore alluminio).
+  const prompt = `Sei JARVIS, assistente commerciale di Daniele Settanni, agente per Co.Me.Fi. Metalli (distributore alluminio).
 
 Genera un briefing operativo BREVE (max 5 righe) per il cliente "${c.azienda}" da usare prima di una chiamata o visita.
-Il tono è diretto, pratico, da collega a collega. Evidenzia sempre:
-1. Cosa acquista principalmente
-2. Stato del rapporto (attivo, freddo, in attesa, ecc.)
-3. Ultime interazioni rilevanti
-4. Problemi o criticità passate (reclami, ritardi, insoluti, richieste non evase)
-5. Cosa c'è di aperto (task, RDO, preventivi in attesa)
+Tono diretto, pratico. Evidenzia: cosa acquista, stato rapporto, ultime interazioni rilevanti, problemi/criticità passate (reclami, ritardi, insoluti), cosa c'è di aperto.
 
-DATI CLIENTE:
-Città: ${c.citta||'—'} | Stato: ${c.stato||'—'}
-Descrizione: ${c.descrizione||'non disponibile'}
-Consumi: ${consStr}
+DATI: Città: ${c.citta||'—'} | Stato: ${c.stato||'—'} | Consumi: ${consStr}
+Descrizione: ${(c.descrizione||'').substring(0,200)}
 
-ULTIME VISITE:
-${visiteStr}
+VISITE:\n${visiteStr}
 
-MAIL RECENTI:
-${mailStr}
+MAIL:\n${mailStr}
 
-TASK APERTI:
-${taskStr}
+TASK APERTI:\n${taskStr}
 
-Rispondi SOLO con il testo del briefing, senza titoli, senza asterischi, senza markdown. Italiano.`;
+Rispondi SOLO con il testo del briefing, senza titoli né markdown. Italiano.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(WH_BRIEFING, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
-    const testo = data.content?.[0]?.text || '';
-    if (el && testo) {
+    const testo = data.testo || '';
+    if (!testo) throw new Error('empty');
+
+    // Mostra
+    if (el) {
       el.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;color:var(--ink2);line-height:1.65">${esc(testo)}</div>
         <div style="margin-top:8px;text-align:right">
-          <button onclick="caricaBriefing('${id}')" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
+          <button onclick="caricaBriefing('${id}', true)" style="font-size:10px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:var(--fm)">↺ aggiorna</button>
         </div>`;
     }
+
+    // Salva in cache CONFIG via webhook
+    const ts = new Date().toISOString().split('T')[0];
+    fetch(WH_SALVA_BRIEF, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chiave, testo, ts: ts })
+    }).catch(()=>{});
+
+    // Aggiorna configMap locale
+    if (!window.configMap) window.configMap = {};
+    window.configMap[chiave] = testo;
+    window.configMap['BRIEF_TS_' + id] = ts;
+
   } catch(e) {
     if (el) el.innerHTML = '<div style="color:var(--ink3);font-size:11px;font-family:var(--fm)">// briefing non disponibile</div>';
   }
@@ -3308,6 +3337,7 @@ badges();
 syncClienti();
 syncSheets();
 syncRdoChiuse();
+syncConfig();
 syncRdoChiuse();
 setInterval(syncSheets, 3*60*1000);
 setInterval(flushQueue, 30*1000);
