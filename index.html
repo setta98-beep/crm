@@ -831,30 +831,32 @@ async function syncTask() {
   const daSheet = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', testo: r.TESTO||'',
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
-    fatto: r.FATTO === 'SI'
+    fatto: r.FATTO === 'SI',
+    _ts: r.MODIFICATO || ''
   })).filter(n => n.testo);
 
-  // Merge: preferisci valori locali su quelli di Sheets per evitare
-  // che sync sovrascriva modifiche appena fatte prima che il webhook abbia scritto
+  // Merge per timestamp: vince chi è stato modificato più di recente
   const localeMap = {};
   note.forEach(n => { if (n.id) localeMap[n.id] = n; });
   const merged = daSheet.map(s => {
     const loc = localeMap[s.id];
-    if (!loc) return s; // non esiste in locale → usa Sheets
-    // Usa locale su tutti i campi: è sempre più aggiornato di Sheets
-    // (il webhook scrive su Sheets con piccolo ritardo)
-    return {
-      ...s,
-      testo:    loc.testo    || s.testo,
-      azienda:  loc.azienda  !== undefined ? loc.azienda  : s.azienda,
-      data:     loc.data     !== undefined ? loc.data     : s.data,
-      priorita: loc.priorita || s.priorita,
-      fatto:    loc.fatto    || s.fatto
-    };
+    if (!loc) return s;
+    const tsLoc = loc._ts || '';
+    const tsSheet = s._ts || '';
+    if (tsLoc > tsSheet) return { ...s, ...loc, _ts: tsLoc };
+    return s;
   });
   const sheetIds = new Set(daSheet.map(n => n.id));
   const soloLocali = note.filter(n => n.id && !sheetIds.has(n.id));
-  note = [...merged, ...soloLocali];
+
+  // Ordina: non fatti prima → per data scadenza → per priorità
+  const priOrd = { 'Alta': 0, 'Media': 1, 'Bassa': 2 };
+  note = [...merged, ...soloLocali].sort((a, b) => {
+    if (a.fatto !== b.fatto) return a.fatto ? 1 : -1;
+    const da = a.data || '9999', db = b.data || '9999';
+    if (da !== db) return da.localeCompare(db);
+    return (priOrd[a.priorita]||1) - (priOrd[b.priorita]||1);
+  });
   LW('_note', note);
   renderAtt();
   badges();
@@ -1797,9 +1799,10 @@ function renderAtt() {
 
 
 async function toggleAtt(id) {
-  note=note.map(n=>n.id===id?{...n,fatto:!n.fatto}:n); W('_note',note);
+  const ts = new Date().toISOString();
+  note=note.map(n=>n.id===id?{...n,fatto:!n.fatto,_ts:ts}:n); W('_note',note);
   const n=note.find(x=>x.id===id);
-  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto,FATTO:n.fatto?'SI':'NO'});
+  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto,FATTO:n.fatto?'SI':'NO',MODIFICATO:ts});
   renderAtt();
 }
 function detAtt(id) {
@@ -1822,9 +1825,10 @@ function openAttForm() {
 }
 async function saveAtt() {
   const te=document.getElementById('fa-te').value.trim(); if(!te) return;
-  const n={id:uid(),azienda:document.getElementById('fa-az').value.trim(),testo:te,data:document.getElementById('fa-da').value,priorita:document.getElementById('fa-pr').value,fatto:false};
+  const ts = new Date().toISOString();
+  const n={id:uid(),azienda:document.getElementById('fa-az').value.trim(),testo:te,data:document.getElementById('fa-da').value,priorita:document.getElementById('fa-pr').value,fatto:false,_ts:ts};
   note=[n,...note]; W('_note',note);
-  await pushSheet(WH_TASK, n);
+  await pushSheet(WH_TASK, {...n, MODIFICATO:ts});
   closeMo(); renderAtt();
 }
 async function delAtt(id) {
@@ -3272,9 +3276,11 @@ async function saveAttEdit(id) {
     data:     document.getElementById('fat-da')?.value||'',
     priorita: document.getElementById('fat-pr')?.value||'Media',
   } : n);
+  const ts = new Date().toISOString();
+  note = note.map(n => n.id===id ? {...n, _ts: ts} : n);
   W('_note', note);
   const upd = note.find(x=>x.id===id);
-  await pushSheet(WH_TASK, {id:upd.id,azienda:upd.azienda,testo:upd.testo,data:upd.data,priorita:upd.priorita,fatto:upd.fatto});
+  await pushSheet(WH_TASK, {id:upd.id,azienda:upd.azienda,testo:upd.testo,data:upd.data,priorita:upd.priorita,fatto:upd.fatto,MODIFICATO:ts});
   closeMo(); renderAtt();
 }
 
