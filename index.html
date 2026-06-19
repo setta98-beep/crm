@@ -824,32 +824,41 @@ async function syncVisite() {
   renderVisite();
 }
 
+// Task modificati di recente (finestra 15s) — non sovrascrivere durante latenza webhook
+const _taskGrazia = {}; // id → timestamp modifica locale
+
 async function syncTask() {
   renderAtt();
   const rows = await syncFromSheet('TASK');
   if (!rows) return;
+  const ora = Date.now();
   const daSheet = rows.map(r => ({
     id: r.ID||uid(), azienda: r.AZIENDA||'', testo: r.TESTO||'',
     data: r.DATA_SCADENZA||'', priorita: r.PRIORITA||'Media',
-    fatto: r.FATTO === 'SI',
-    _ts: r.MODIFICATO || ''
+    fatto: r.FATTO === 'SI'
   })).filter(n => n.testo);
 
-  // Merge per timestamp: vince chi è stato modificato più di recente
+  // Sheets è fonte di verità — ma se ho appena modificato un task (< 15s),
+  // tengo il valore locale finché il webhook non ha scritto
   const localeMap = {};
   note.forEach(n => { if (n.id) localeMap[n.id] = n; });
+
   const merged = daSheet.map(s => {
-    const loc = localeMap[s.id];
-    if (!loc) return s;
-    const tsLoc = loc._ts || '';
-    const tsSheet = s._ts || '';
-    if (tsLoc > tsSheet) return { ...s, ...loc, _ts: tsLoc };
+    const gracePeriod = _taskGrazia[s.id];
+    if (gracePeriod && (ora - gracePeriod) < 15000) {
+      // Ancora in finestra di grazia → usa locale
+      return localeMap[s.id] || s;
+    }
+    // Fuori finestra → Sheets è autoritativo
+    delete _taskGrazia[s.id];
     return s;
   });
+
+  // Task solo in locale (non ancora su Sheets)
   const sheetIds = new Set(daSheet.map(n => n.id));
   const soloLocali = note.filter(n => n.id && !sheetIds.has(n.id));
 
-  // Ordina: non fatti prima → per data scadenza → per priorità
+  // Ordina: non fatti → data scadenza → priorità
   const priOrd = { 'Alta': 0, 'Media': 1, 'Bassa': 2 };
   note = [...merged, ...soloLocali].sort((a, b) => {
     if (a.fatto !== b.fatto) return a.fatto ? 1 : -1;
@@ -1799,10 +1808,10 @@ function renderAtt() {
 
 
 async function toggleAtt(id) {
-  const ts = new Date().toISOString();
-  note=note.map(n=>n.id===id?{...n,fatto:!n.fatto,_ts:ts}:n); W('_note',note);
+  _taskGrazia[id] = Date.now();
+  note=note.map(n=>n.id===id?{...n,fatto:!n.fatto}:n); W('_note',note);
   const n=note.find(x=>x.id===id);
-  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto,FATTO:n.fatto?'SI':'NO',MODIFICATO:ts});
+  await pushSheet(WH_TASK, {id:n.id,azienda:n.azienda,testo:n.testo,data:n.data,priorita:n.priorita,fatto:n.fatto,FATTO:n.fatto?'SI':'NO'});
   renderAtt();
 }
 function detAtt(id) {
@@ -1825,10 +1834,9 @@ function openAttForm() {
 }
 async function saveAtt() {
   const te=document.getElementById('fa-te').value.trim(); if(!te) return;
-  const ts = new Date().toISOString();
-  const n={id:uid(),azienda:document.getElementById('fa-az').value.trim(),testo:te,data:document.getElementById('fa-da').value,priorita:document.getElementById('fa-pr').value,fatto:false,_ts:ts};
+  const n={id:uid(),azienda:document.getElementById('fa-az').value.trim(),testo:te,data:document.getElementById('fa-da').value,priorita:document.getElementById('fa-pr').value,fatto:false};
   note=[n,...note]; W('_note',note);
-  await pushSheet(WH_TASK, {...n, MODIFICATO:ts});
+  await pushSheet(WH_TASK, n);
   closeMo(); renderAtt();
 }
 async function delAtt(id) {
@@ -3270,17 +3278,16 @@ async function editAtt(id) {
 
 async function saveAttEdit(id) {
   const te = document.getElementById('fat-te')?.value.trim(); if(!te) return;
+  _taskGrazia[id] = Date.now();
   note = note.map(n => n.id===id ? {...n,
     testo:    te,
     azienda:  document.getElementById('fat-az')?.value.trim()||'',
     data:     document.getElementById('fat-da')?.value||'',
     priorita: document.getElementById('fat-pr')?.value||'Media',
   } : n);
-  const ts = new Date().toISOString();
-  note = note.map(n => n.id===id ? {...n, _ts: ts} : n);
   W('_note', note);
   const upd = note.find(x=>x.id===id);
-  await pushSheet(WH_TASK, {id:upd.id,azienda:upd.azienda,testo:upd.testo,data:upd.data,priorita:upd.priorita,fatto:upd.fatto,MODIFICATO:ts});
+  await pushSheet(WH_TASK, {id:upd.id,azienda:upd.azienda,testo:upd.testo,data:upd.data,priorita:upd.priorita,fatto:upd.fatto,FATTO:upd.fatto?'SI':'NO'});
   closeMo(); renderAtt();
 }
 
